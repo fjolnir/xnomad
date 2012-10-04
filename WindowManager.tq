@@ -58,7 +58,7 @@ import "Accessibility"
         unless (window isKindOfClass: AccessibilityWindow) && (window isResizable)
             ^nil
         if isActive && window[@AXMinimized] != 1
-            #activeWindows += [window]
+            #activeWindows insert: window at: 0
         else
             #inactiveWindows << window
 
