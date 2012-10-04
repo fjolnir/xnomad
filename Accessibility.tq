@@ -1,0 +1,113 @@
+import "AppKit"
+
+#AccessibilityElement {
+    accessor: @axElement
+
+    + withAXElement: element {
+        AXUIElementCopyAttributeValue(element, @AXRole, rolePtr = TQPointer toObject)
+        role = rolePtr value
+        if role == @AXApplication
+            ret = AccessibilityApplication new
+        else if role == @AXWindow
+            ret = AccessibilityWindow new
+        else
+            ret = AccessibilityElement new
+        ret#axElement = element
+        ^ret
+    }
+    + systemWide   `self withAXElement: AXUIElementCreateSystemWide() autorelease`
+    + withPID: pid `self withAXElement: AXUIElementCreateApplication(pid) autorelease`
+
+
+    - []: key {
+        AXUIElementCopyAttributeValue(#axElement, key, valPtr = TQPointer toObject)
+        val  = valPtr value autorelease
+
+        if val isKindOfClass: __NSCFType {
+            cfTypeId = CFGetTypeID(val)
+            if cfTypeId == AXUIElementGetTypeID() 
+                ^AccessibilityElement withAXElement: val
+            else if cfTypeId == AXValueGetTypeID()
+                type = AXValueGetType(val)
+        }
+        if type == KAXValueCGPointType
+            AXValueGetValue(val, KAXValueCGPointType, ret = TQPointer toNSPoint)
+        else if type == KAXValueCGSizeType
+            AXValueGetValue(val, KAXValueCGSizeType,  ret = TQPointer toNSSize)
+        else if type == KAXValueCGRectType
+            AXValueGetValue(val, KAXValueCGRectType,  ret = TQPointer toNSRect)
+        else if val isKindOfClass: NSArray
+            ^val map: `item| AccessibilityElement withAXElement: item`
+        else
+            ^val
+        ^ret value
+    }
+    - setPointAttribute: val forKey: key {
+        self[key] = AXValueCreate(KAXValueCGPointType, TQPointer to: val withType: "{__NSPoint=dd}")
+    }
+    - setSizeAttribute: val forKey: key {
+        self[key] = AXValueCreate(KAXValueCGSizeType,  TQPointer to: val withType: "{__NSSize=dd}")
+    }
+    - []: key =: val {
+        ^AXUIElementSetAttributeValue(#axElement, key, val) == 0
+    }
+    - isAttrWritable: key {
+        ^(AXUIElementIsAttributeSettable(#axElement, key, res = TQPointer toChar) == 0) && (res value == 1)
+    }
+    - pid {
+        if #cachedPid
+            ^#cachedPid
+        AXUIElementGetPid(#axElement, pidPtr = TQPointer toInt)
+        ^#cachedPid = pidPtr value
+    }
+    - isEqual: other `(self pid == other pid) && CFEqual(#axElement, other#axElement)`
+}
+
+#AccessibilityApplication < AccessibilityElement {
+    accessor: @notificationCallbacks initialValue: []
+
+    - observe: notification on: element with: lambda {
+        unless #observer {
+            AXObserverCreate(self pid, { observer, element, notification, callbackPtr |
+                callback = callbackPtr addressAsObject
+                callback call: (AccessibilityElement withAXElement: element)
+            }, obsPtr = TQPointer toObject)
+            #observer = obsPtr value autorelease
+            CFRunLoopAddSource(NSRunLoop currentRunLoop getCFRunLoop, AXObserverGetRunLoopSource(#observer), KCFRunLoopDefaultMode)
+        }
+        lambda = lambda copy
+        #notificationCallbacks << lambda \ Since we are passing it to a simple void* we need to keep a reference to the callback
+        AXObserverAddNotification(#observer, element axElement, notification, lambda)
+    }
+    - description `"<AccessibilityApplication: '«self[@AXTitle]»' «self pid»>"`
+}
+
+#AccessibilityWindow < AccessibilityElement {
+    + frontMostWindow {
+        system = AccessibilityElement systemWide
+        app    = system[@AXFocusedApplication]
+        unless app
+            ^nil
+        ^app[@AXFocusedWindow]
+    }
+    - frame `[self[@AXPosition], self[@AXSize]]`
+    - setFrame: frame {
+        self; setPointAttribute: frame[0] forKey: @AXPosition;
+               setSizeAttribute: frame[1] forKey: @AXSize
+    }
+    - isResizable {
+        ^self isAttrWritable: @AXSize
+    }
+    - isMovable {
+        ^self isAttrWritable: @AXPosition
+    }
+    - raise {
+        GetProcessForPID(self pid, psn = TQPointer toVoid)
+        SetFrontProcess(psn)
+        err = AXUIElementPerformAction(#axElement, @AXRaise)
+    }
+    - description {
+        frame = self frame
+        ^"<AccessibilityWindow: '«self[@AXTitle]»' («frame[0][0]», «frame[0][1]»), («frame[1][0]», «frame[1][1]»)>"
+    }
+}

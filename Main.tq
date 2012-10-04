@@ -1,0 +1,77 @@
+import "WindowManager"
+import "Hotkeys"
+import "JSON"
+
+prefs = parseJSONFile("~/.xnomad")
+
+wm = WindowManager new
+wm#ratio           = prefs[@Ratio] || 0.7
+wm#windowsInMaster = prefs[@WindowsInMaster] || 1
+wm reflow
+
+mgr = HotkeyManager new
+hotkeys = prefs[@Hotkeys]
+
+if key = hotkeys[@Swap] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm swapWindow: AccessibilityWindow frontMostWindow
+        wm reflow
+    }
+}
+
+if key = hotkeys[@SelectPrev] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm selectPreviousWindow: AccessibilityWindow frontMostWindow
+        wm reflow
+    }
+}
+if key = hotkeys[@SelectNext] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm selectNextWindow: AccessibilityWindow frontMostWindow
+        wm reflow
+    }
+}
+
+if key = hotkeys[@SwapPrev] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm swapWithPreviousWindow: AccessibilityWindow frontMostWindow
+        wm reflow
+    }
+}
+if key = hotkeys[@SwapNext] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm swapWithNextWindow: AccessibilityWindow frontMostWindow
+        wm reflow
+    }
+}
+
+if key = hotkeys[@IncreaseRatio] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm#ratio += 0.05
+        wm reflow
+    }
+}
+
+if key = hotkeys[@DecreaseRatio] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm#ratio -= 0.05
+        wm reflow
+    }
+}
+
+if key = hotkeys[@MoreMasters] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm#windowsInMaster += 1
+        wm reflow
+    }
+}
+
+if key = hotkeys[@FewerMasters] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        `wm#windowsInMaster -= 1` if: wm#windowsInMaster > 1
+        wm reflow
+    }
+}
+
+
+NSApplication sharedApplication run

@@ -1,0 +1,15 @@
+{
+    "Ratio": 0.7,
+    "WindowsInMaster": 1,
+    "Hotkeys": {
+        "Swap":          { "key": "s", "modifiers": [ "control" ] },
+        "SelectPrev":    { "key": "k", "modifiers": [ "control" ] },
+        "SelectNext":    { "key": "j", "modifiers": [ "control" ] },
+        "SwapPrev":      { "key": "k", "modifiers": [ "control", "shift" ] },
+        "SwapNext":      { "key": "j", "modifiers": [ "control", "shift" ] },
+        "IncreaseRatio": { "key": "l", "modifiers": [ "control" ] },
+        "DecreaseRatio": { "key": "h", "modifiers": [ "control" ] },
+        "MoreMasters":   { "key": ".", "modifiers": [ "control" ] },
+        "FewerMasters":  { "key": ",", "modifiers": [ "control" ] }
+    }
+}

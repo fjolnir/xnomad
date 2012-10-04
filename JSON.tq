@@ -1,0 +1,4 @@
+parseJSONFile = { path |
+    data = NSData dataWithContentsOfFile: (path stringByExpandingTildeInPath)
+    ^data ? (NSJSONSerialization JSONObjectWithData:data options: 0 error: nil) ! nil
+}

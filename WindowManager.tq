@@ -1,0 +1,180 @@
+import "Accessibility"
+
+#NSNotificationCenter {
+    - observe: name with: lambda `self addObserverForName: name object: nil queue: nil usingBlock:lambda`
+}
+
+#WindowManager {
+    accessor: @applications    initialValue: []
+    accessor: @activeWindows   initialValue: []
+    accessor: @inactiveWindows initialValue: []
+    accessor: @ratio           initialValue: 0.6
+    accessor: @windowsInMaster initialValue: 1
+
+    - init {
+        #layout = TallLayout new
+
+        workspace = NSWorkspace sharedWorkspace
+        workspace runningApplications each: { runningApp |
+            unless runningApp bundleIdentifier hasPrefix: "com.apple.dashboard"
+                self addApplicationWithPID: runningApp processIdentifier
+        }
+
+        center = workspace notificationCenter
+        adder   = `n| ~self;    addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
+        remover = `n| ~self; removeApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
+        activator   = `n| ~self;   activateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
+        deactivator = `n| ~self; deactivateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
+        center; observe: NSWorkspaceDidLaunchApplicationNotification    with: adder;
+                observe: NSWorkspaceDidTerminateApplicationNotification with: remover;
+                observe: NSWorkspaceDidUnhideApplicationNotification    with: activator;
+                observe: NSWorkspaceDidHideApplicationNotification      with: deactivator
+        ^self
+    }
+    - applicationWithPID: pid {
+        ^#applications find: `app| (app pid) == pid`
+    }
+    - addApplicationWithPID: pid {
+        if (self applicationWithPID: pid)
+            ^nil
+        app = AccessibilityElement withPID: pid
+        unless app isKindOfClass: AccessibilityApplication
+            ^nil
+        #applications << app
+
+        app[@AXWindows] each: { window |
+            self addWindow: window active: (app[@AXHidden] == 0)
+        }
+        \ Watch for new window notifications
+        app observe: @AXWindowCreated on: app with: { newWindow |
+            self; addWindow: newWindow; reflow
+        }
+    }
+    - addWindow: window `self addWindow: window active: yes`
+    - addWindow: window active: isActive {
+        unless (window isKindOfClass: AccessibilityWindow) && (window isResizable)
+            ^nil
+
+        if isActive && window[@AXMinimized] != 1
+            #activeWindows += [window]
+        else
+            #inactiveWindows << window
+
+        app = self applicationWithPID: window pid
+        app observe: @AXUIElementDestroyed on: window with: { _ |
+            self; removeWindow: window; reflow
+        }
+        app observe: @AXWindowMiniaturized on: window with: { _ |
+            self; deactivateWindow: window; reflow
+        }
+        app observe: @AXWindowDeminiaturized on: window with: { _ |
+            self; activateWindow: window; reflow
+        }
+        ^valid
+    }
+    - activateWindow: window {
+        #activeWindows   += [window]
+        #inactiveWindows -= [window]
+    }
+    - deactivateWindow: window {
+        #activeWindows   -= [window]
+        #inactiveWindows += [window]
+    }
+    - removeWindow: window {
+        #activeWindows   -= [window]
+        #inactiveWindows -= [window]
+    }
+    - removeApplicationWithPID: pid {
+        #activeWindows = #activeWindows select: `win| (win pid) != pid`
+        #applications  = #applications  select: `app| (app pid) != pid`
+    }
+    - activateApplicationWithPID: pid {
+        activated = #inactiveWindows select: `win| (win pid) == pid`
+        #inactiveWindows -= activated
+        #activeWindows   += activated
+    }
+    - deactivateApplicationWithPID: pid {
+        deactivated = #activeWindows select: `win| (win pid) == pid`
+        #inactiveWindows += deactivated
+        #activeWindows   -= deactivated
+    }
+    - reflow {
+        #layout reflow: self
+    }
+    - swapWindow: window { \ Swaps the window with it's closest counterpart on the other side
+        \ Get the existing reference managing the same physical window
+        idx = #activeWindows indexOf: window
+        isOnLeft = idx < #windowsInMaster
+
+        winCount = #activeWindows count
+        if isOnLeft {
+            otherIdx = #windowsInMaster + (winCount - #windowsInMaster) * (idx / #windowsInMaster)
+            if (idx / #windowsInMaster) >= 0.5
+                otherIdx = otherIdx ceil
+        } else {
+            otherIdx = #windowsInMaster * ((idx - #windowsInMaster) / (winCount - #windowsInMaster))
+        }
+        #activeWindows[idx], #activeWindows[otherIdx] = #activeWindows[otherIdx], #activeWindows[idx]
+    }
+    - selectPreviousWindow: window {
+        idx = #activeWindows indexOf: window
+        if idx != -1 {
+            idx = (idx == 0) ? (#activeWindows count) - 1 ! idx - 1
+            #activeWindows[idx] raise
+        }
+    }
+    - selectNextWindow: window {
+        idx = #activeWindows indexOf: window
+        if idx != -1 {
+            idx = (idx == (#activeWindows count) - 1) ? 0 ! idx + 1
+            #activeWindows[idx] raise
+        }
+    }
+
+    - swapWithPreviousWindow: window {
+        idx = #activeWindows indexOf: window
+        if idx != -1 {
+            otherIdx = (idx == 0) ? (#activeWindows count) - 1 ! idx - 1
+            #activeWindows[idx], #activeWindows[otherIdx] = #activeWindows[otherIdx], #activeWindows[idx]
+        }
+    }
+    - swapWithNextWindow: window {
+        idx = #activeWindows indexOf: window
+        if idx != -1 {
+            otherIdx = (idx == (#activeWindows count) - 1) ? 0 ! idx + 1
+            #activeWindows[idx], #activeWindows[otherIdx] = #activeWindows[otherIdx], #activeWindows[idx]
+        }
+    }
+
+}
+
+min = `a,b| (a > b) ? b ! a`
+
+#TallLayout {
+    - reflow: wm {
+        windows     = wm#activeWindows
+        screenFrame = NSScreen mainScreen frame
+
+        leftCount  = min(windows count, wm#windowsInMaster)
+        rightCount = (windows count) - leftCount
+        split = screenFrame[1][0]
+        `split *= wm#ratio` unless: (windows count) <= wm#windowsInMaster
+
+        i = 0
+        windows each: { win |
+            if i < wm#windowsInMaster {
+                h = screenFrame[1][1] / leftCount
+                y = h*i + 22
+                frame = [[0, y], [split, h]]
+                win setFrame: frame
+            } else {
+                h = screenFrame[1][1] / rightCount
+                y = h*(i - wm#windowsInMaster) + 22
+                frame = [[split, y], [screenFrame[1][0] - split, h]]
+                win setFrame: frame
+            }
+            ++i
+        }
+    }
+}
+
