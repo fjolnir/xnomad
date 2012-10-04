@@ -64,7 +64,6 @@ import "Accessibility"
 
         app = self applicationWithPID: window pid
         app observe: @AXUIElementDestroyed on: window with: { _ |
-            "foo" print
             self; removeWindow: window; reflow
         }
         app observe: @AXWindowMiniaturized on: window with: { _ |
