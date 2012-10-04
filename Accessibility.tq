@@ -1,4 +1,5 @@
 import "AppKit"
+import "CGSPrivate"
 
 #AccessibilityElement {
     accessor: @axElement
@@ -91,10 +92,9 @@ import "AppKit"
         ^app[@AXFocusedWindow]
     }
     - frame `[self[@AXPosition], self[@AXSize]]`
-    - setFrame: frame {
-        self; setPointAttribute: frame[0] forKey: @AXPosition;
-               setSizeAttribute: frame[1] forKey: @AXSize
-    }
+    - setFrame: f     `self; setPosition: f[0]; setSize: f[1]`
+    - setPosition: p  `self setPointAttribute: p forKey: @AXPosition`
+    - setSize: s      `self setSizeAttribute: s  forKey: @AXSize`
     - isResizable {
         ^self isAttrWritable: @AXSize
     }
@@ -105,6 +105,33 @@ import "AppKit"
         GetProcessForPID(self pid, psn = TQPointer toVoid)
         SetFrontProcess(psn)
         err = AXUIElementPerformAction(#axElement, @AXRaise)
+    }
+    \ Tries to use private CoreGraphics functions to discover the window level, just returns 0 (default) if it can't
+    - level {
+        GetProcessForPID(self pid, psn = TQPointer toVoid)
+        connection = _CGSDefaultConnection()
+        err = CGSGetConnectionIDForPSN(connection, psn, temp = TQPointer toInt)
+        if err != 0
+            ^nil
+        appConnection = temp value
+
+        CGSGetWindowCount(connection, appConnection, temp = TQPointer toInt)
+        windowList = TQPointer withType: @i count: temp value
+        CGSGetWindowList(connection, appConnection, temp value, windowList, temp)
+        windowCount = temp value
+
+        frame = TQPointer toNSRect
+        ourFrame = self frame
+        level = 0
+        0 to: (windowCount-1); each: { i |
+            CGSGetScreenRectForWindow(connection, windowList[i], frame)
+            if NSEqualRects(ourFrame, frame value) {
+                CGSGetWindowLevel(connection, windowList[i], temp)
+                level = temp value
+                ^nothing
+            }
+        }
+        ^level
     }
     - description {
         frame = self frame

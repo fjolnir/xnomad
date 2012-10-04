@@ -73,5 +73,10 @@ if key = hotkeys[@FewerMasters] {
     }
 }
 
+if key = hotkeys[@CycleLayouts] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm; cycleLayouts; reflow
+    }
+}
 
 NSApplication sharedApplication run

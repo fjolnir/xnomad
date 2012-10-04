@@ -14,7 +14,8 @@ import "Carbon"
             @delete     => 117, @insert     => 114,
             @backspace  => 51,  @return     => 36,
             @tab        => 48,  @capsLock   => 57,
-            @","        => 43,  @"."        => 47
+            @","        => 43,  @"."        => 47,
+            @" "        => 49
         }
         #modifierMasks  = {
             @option  => 1 lshift: 11,
