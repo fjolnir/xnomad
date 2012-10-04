@@ -17,3 +17,10 @@ To learn the hotkeys, read xnomad.default
 ##building
 
 In order to build xnomad you'll first need to install [tranquil](https://github.com/fjolnir/tranquil). Then you can simply write (assuming you added /usr/local/tranquil/bin to your PATH) `tqc Main.tq -o xnomad` and a binary will appear.
+
+##todo
+
+* Multi-monitor support
+* Allow floating windows
+* Additional layouts (Fullscreen, Widescreen, etc..)
+* Probably some other things I can't recall right now
