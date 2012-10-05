@@ -1,18 +1,25 @@
 import "Accessibility"
+import "Layouts"
 
-#NSNotificationCenter {
+#NSNotificationCenter
+{
     - observe: name with: lambda `self addObserverForName: name object: nil queue: nil usingBlock:lambda`
 }
 
-#WindowManager {
-    accessor: @applications    initialValue: []
-    accessor: @activeWindows   initialValue: []
-    accessor: @inactiveWindows initialValue: []
-    accessor: @ratio           initialValue: 0.6
-    accessor: @windowsInMaster initialValue: 1
+#WindowManager
+{
+    accessor: @applications             initialValue: []
+    accessor: @activeWindows            initialValue: []
+    accessor: @inactiveWindows          initialValue: []
+    accessor: @ratio                    initialValue: 0.6
+    accessor: @windowsInMaster          initialValue: 1
+    accessor: @screensThatNeedReflowing initialValue: []
 
-    - init {
-        #currLayout = 0
+    - init
+    {
+        #currLayouts = {}
+        NSScreen screens each: `screen| currLayouts[screen] = 0`
+
         #layouts = [TallLayout new, FullscreenLayout new]
 
         workspace = NSWorkspace sharedWorkspace
@@ -20,7 +27,7 @@ import "Accessibility"
             unless runningApp bundleIdentifier hasPrefix: "com.apple.dashboard"
                 self addApplicationWithPID: runningApp processIdentifier
         }
-        self currentLayout prepare: self
+        \self currentLayout prepare: self
 
         center = workspace notificationCenter
         adder   = `n| ~self;    addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
@@ -33,10 +40,13 @@ import "Accessibility"
                 observe: NSWorkspaceDidHideApplicationNotification      with: deactivator
         ^self
     }
-    - applicationWithPID: pid {
+
+    - applicationWithPID: pid
+    {
         ^#applications find: `app| (app pid) == pid`
     }
-    - addApplicationWithPID: pid {
+    - addApplicationWithPID: pid
+    {
         if (self applicationWithPID: pid)
             ^nil
         app = AccessibilityElement withPID: pid
@@ -52,14 +62,18 @@ import "Accessibility"
             self; addWindow: newWindow; reflow
         }
     }
+
     - addWindow: window `self addWindow: window active: yes`
-    - addWindow: window active: isActive {
+    - addWindow: window active: isActive
+    {
         subrole = window[@AXSubrole]
         unless (window isKindOfClass: AccessibilityWindow) && (window isResizable)
             ^nil
-        if isActive && window[@AXMinimized] != 1
+        if isActive && window[@AXMinimized] != 1 {
             #activeWindows insert: window at: 0
-        else
+            "screen: «window screen»: «NSStringFromRect(window screen flippedFrame)»" print
+            self markScreenForReflowing: window screen
+        } else
             #inactiveWindows << window
 
         app = self applicationWithPID: window pid
@@ -74,48 +88,105 @@ import "Accessibility"
         }
         ^valid
     }
-    - managedWindows {
-        ^#activeWindows select: `w| (w level) == 0`
-    }
 
-    - activateWindow: window {
+    - managedWindowsForScreen: screen
+    {
+        ^#activeWindows select: `w| (w level == 0) && (w screen == screen)`
+    }
+    - managedWindows `self managedWindowsForScreen: nil`
+
+    - activateWindow: window
+    {
+        self markScreenForReflowing: window screen
         #activeWindows   += [window]
         #inactiveWindows -= [window]
     }
-    - deactivateWindow: window {
+    - deactivateWindow: window
+    {
+        self markScreenForReflowing: window screen
         #activeWindows   -= [window]
         #inactiveWindows += [window]
     }
-    - removeWindow: window {
+    - removeWindow: window
+    {
+        self markScreenForReflowing: window screen
         #activeWindows   -= [window]
         #inactiveWindows -= [window]
     }
-    - removeApplicationWithPID: pid {
+
+    - activateApplicationWithPID: pid
+    {
+        activated = #inactiveWindows select: `win| (win pid) == pid`
+        activated each: { window |
+            self markScreenForReflowing: window screen
+            #inactiveWindows removeObject: window
+            #activeWindows << window
+        }
+    }
+    - deactivateApplicationWithPID: pid
+    {
+        deactivated = #activeWindows select: `win| (win pid) == pid`
+        deactivated each: { window |
+            self markScreenForReflowing: window screen
+            #activeWindows removeObject: window
+            #inactiveWindows << window
+        }
+    }
+    - removeApplicationWithPID: pid
+    {
         #activeWindows = #activeWindows select: `win| (win pid) != pid`
         #applications  = #applications  select: `app| (app pid) != pid`
     }
-    - activateApplicationWithPID: pid {
-        activated = #inactiveWindows select: `win| (win pid) == pid`
-        #inactiveWindows -= activated
-        #activeWindows   += activated
+
+    - currentLayoutForScreen: screen `#layouts[#currLayouts[screen]]`
+    - markScreenForReflowing: screen
+    {
+        `#screensThatNeedReflowing << screen` unless: (#screensThatNeedReflowing contains: screen)
     }
-    - deactivateApplicationWithPID: pid {
-        deactivated = #activeWindows select: `win| (win pid) == pid`
-        #inactiveWindows += deactivated
-        #activeWindows   -= deactivated
-    }
-    - currentLayout `#layouts[#currLayout]`
-    - reflow `self currentLayout reflow: self`
-    - cycleLayouts {
-        if ++#currLayout >= #layouts count
-            #currLayout = 0
-        self currentLayout prepare: self
+    - reflow
+    {
+        #screensThatNeedReflowing each: { screen |
+            self currentLayoutForScreen:screen; reflow: self screen: screen
+        }
+        #screensThatNeedReflowing = []
     }
 
-    - minIdx `self currentLayout minIdx: self`
-    - maxIdx `self currentLayout maxIdx: self`
+    - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen`
+    - cycleLayoutsForScreen: screen
+    {
+        if ++#currLayouts[screen] >= #layouts count
+            #currLayouts[screen] = 0
+        self currentLayoutForScreen: screen; prepare: self
+        self markScreenForReflowing: screen
+    }
 
-    - swapWindow: window { \ Swaps the window with it's closest counterpart on the other side
+    - windowBefore: win `self currentLayoutForScreen: win screen; windowBefore: win inWm: self`
+    - windowAfter:  win `self currentLayoutForScreen: win screen; windowAfter: win inWm: self`
+
+    - selectPreviousWindow: window `self windowBefore: window; raise`
+    - selectNextWindow: window     `self  windowAfter: window; raise`
+
+    - swapWindow: a with: b
+    {
+        if a != b {
+            idxA = #activeWindows indexOf: a
+            idxB = #activeWindows indexOf: b
+            #activeWindows[idxA], #activeWindows[idxB] = #activeWindows[idxB], #activeWindows[idxA]
+            self markScreenForReflowing: a screen
+            self markScreenForReflowing: b screen
+        }
+    }
+    - swapWithPreviousWindow: window
+    {
+        self swapWindow: window with: (self windowBefore: window)
+    }
+    - swapWithNextWindow: window
+    {
+        self swapWindow: window with: (self windowAfter: window)
+    }
+    \ Swaps the window with it's closest counterpart on the other side
+    - swapWithCounterpart: window
+    {
         \ Get the existing reference managing the same physical window
         idx = #activeWindows indexOf: window
         isOnLeft = idx < #windowsInMaster
@@ -127,94 +198,8 @@ import "Accessibility"
                 otherIdx = otherIdx ceil
         } else
             otherIdx = #windowsInMaster * ((idx - #windowsInMaster) / (winCount - #windowsInMaster))
-        #activeWindows[idx], #activeWindows[otherIdx] = #activeWindows[otherIdx], #activeWindows[idx]
-    }
-    - selectPreviousWindow: window {
-        idx = #activeWindows indexOf: window
-        if idx != -1 {
-            idx = (idx == self minIdx) ? (self maxIdx) ! idx - 1
-            #activeWindows[idx] raise
-        }
-    }
-    - selectNextWindow: window {
-        idx = #activeWindows indexOf: window
-        if idx != -1 {
-            idx = (idx == self maxIdx) ? (self minIdx) ! idx + 1
-            #activeWindows[idx] raise
-        }
+
+        self swapWindow: window with: #activeWindows[otherIdx]
     }
 
-    - swapWithPreviousWindow: window {
-        idx = #activeWindows indexOf: window
-        if idx != -1 {
-            otherIdx = (idx == 0) ? (#activeWindows count) - 1 ! idx - 1
-            #activeWindows[idx], #activeWindows[otherIdx] = #activeWindows[otherIdx], #activeWindows[idx]
-        }
-    }
-    - swapWithNextWindow: window {
-        idx = #activeWindows indexOf: window
-        if idx != -1 {
-            otherIdx = (idx == (#activeWindows count) - 1) ? 0 ! idx + 1
-            #activeWindows[idx], #activeWindows[otherIdx] = #activeWindows[otherIdx], #activeWindows[idx]
-        }
-    }
 }
-
-min = `a,b| (a > b) ? b ! a`
-
-#Layout {
-    - prepare: wm {
-        idx = wm#activeWindows indexOf: (AccessibilityWindow frontMostWindow)
-        if idx != -1
-            wm#activeWindows[idx], wm#activeWindows[0] = wm#activeWindows[0], wm#activeWindows[idx]
-    }
-    - minIdx: wm `0`
-    - maxIdx: wm `(wm managedWindows count) - 1`
-}
-#TallLayout < Layout {
-    - reflow: wm {
-        windows     = wm managedWindows
-        screenFrame = NSScreen mainScreen frame
-
-        leftCount  = min(windows count, wm#windowsInMaster)
-        rightCount = (windows count) - leftCount
-        split = screenFrame[1][0]
-        `split *= wm#ratio` unless: (windows count) <= wm#windowsInMaster
-
-        i = 0
-        windows each: { win |
-            if i < wm#windowsInMaster {
-                h = screenFrame[1][1] / leftCount
-                y = h*i + 22
-                frame = [[0, y], [split, h]]
-                win setFrame: frame
-            } else {
-                h = screenFrame[1][1] / rightCount
-                y = h*(i - wm#windowsInMaster) + 22
-                frame = [[split, y], [screenFrame[1][0] - split, h]]
-                win setFrame: frame
-            }
-            ++i
-        }
-    }
-}
-
-#FullscreenLayout < Layout {
-    - prepare: wm {
-        super prepare: wm
-        0 to: (wm#windowsInMaster-1); each: `i| wm#activeWindows[i] raise`
-    }
-    - maxIdx: wm `wm#windowsInMaster - 1`
-    - reflow: wm {
-        windows     = wm managedWindows
-        screenFrame = NSScreen mainScreen frame
-
-        count = min(windows count, wm#windowsInMaster)
-        w = screenFrame[1][0] / count
-        h = screenFrame[1][1]
-        0 to: (count-1); each: `i| windows[i] setFrame: [[w*i, 0], [w, h]]`
-        \ Move the others out of the way (Too bad the accessibility api doesn't allow setting window levels, or hiding windows)
-        (1*count) to: (wm#windowsInMaster); each: `i| windows[i] setPosition: [-screenFrame[1][0], screenFrame[1][1]]`
-    }
-}
-

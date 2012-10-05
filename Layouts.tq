@@ -1,0 +1,96 @@
+min = `a,b| (a > b) ? b ! a`
+
+#Layout
+{
+    - prepare: wm
+    {
+        idx = wm#activeWindows indexOf: (AccessibilityWindow frontMostWindow)
+        if idx != -1
+            wm#activeWindows[idx], wm#activeWindows[0] = wm#activeWindows[0], wm#activeWindows[idx]
+    }
+
+    - windowBefore: window inWm: wm
+    {
+        screen  = window screen
+        windows = wm managedWindowsForScreen: screen
+        idx     = windows indexOf: window
+        if idx == 0
+            ^windows last
+        ^windows[idx-1]
+    }
+    - windowAfter: window inWm: wm
+    {
+        screen  = window screen
+        windows = wm managedWindowsForScreen: screen
+        count   = windows count
+        idx     = windows indexOf: window
+        if idx == count-1
+            ^windows[0]
+        ^windows[idx+1]
+    }
+}
+#TallLayout < Layout
+{
+    - reflow: wm screen: screen
+    {
+        windows     = wm managedWindowsForScreen: screen
+        screenFrame = screen flippedFrame
+
+        "------- REFLOW «NSStringFromRect(screenFrame)»" print
+        windows print
+
+        left = screenFrame[0][0]
+        top  = screenFrame[0][1] + 22
+
+        leftCount  = min(windows count, wm#windowsInMaster)
+        rightCount = (windows count) - leftCount
+        split = screenFrame[1][0]
+        `split *= wm#ratio` unless: (windows count) <= wm#windowsInMaster
+
+        i = 0
+        windows each: { win |
+            if i < wm#windowsInMaster {
+                h = screenFrame[1][1] / leftCount
+                y = top + h*i
+                frame = [[left, y], [split, h]]
+                win setFrame: frame
+            } else {
+                h = screenFrame[1][1] / rightCount
+                y = top + h*(i - wm#windowsInMaster)
+                frame = [[left + split, y], [screenFrame[1][0] - split, h]]
+                win setFrame: frame
+            }
+            ++i
+        }
+    }
+}
+#WideLayout < TallLayout
+{
+    
+}
+
+#FullscreenLayout < Layout
+{
+    - prepare: wm
+    {
+        super prepare: wm
+        0 to: (wm#windowsInMaster-1); each: `i| wm#activeWindows[i] raise`
+    }
+
+    - maxIdx: wm `wm#windowsInMaster - 1`
+    - reflow: wm screen: screen {
+        windows     = wm managedWindowsForScreen: screen
+        screenFrame = screen flippedFrame
+
+        left = screenFrame[0][0]
+        top  = screenFrame[0][1] + 22
+
+        count = min(windows count, wm#windowsInMaster)
+        w = screenFrame[1][0] / count
+        h = screenFrame[1][1]
+        0 to: (count-1); each: `i| windows[i] setFrame: [[left + w*i, top], [w, h]]`
+        \ Move the others out of the way (Too bad the accessibility api doesn't allow setting window levels, or hiding windows)
+        (1*count) to: (wm#windowsInMaster); each: `i| windows[i] setPosition: [-screenFrame[1][0], screenFrame[1][1]]`
+    }
+}
+

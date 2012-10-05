@@ -12,13 +12,6 @@ wm reflow
 mgr = HotkeyManager new
 hotkeys = prefs[@Hotkeys]
 
-if key = hotkeys[@Swap] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm swapWindow: AccessibilityWindow frontMostWindow
-        wm reflow
-    }
-}
-
 if key = hotkeys[@SelectPrev] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         wm selectPreviousWindow: AccessibilityWindow frontMostWindow
@@ -32,6 +25,12 @@ if key = hotkeys[@SelectNext] {
     }
 }
 
+if key = hotkeys[@Swap] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm swapWithCounterpart: AccessibilityWindow frontMostWindow
+        wm reflow
+    }
+}
 if key = hotkeys[@SwapPrev] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         wm swapWithPreviousWindow: AccessibilityWindow frontMostWindow

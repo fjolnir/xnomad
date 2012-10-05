@@ -31,17 +31,20 @@ import "CGSPrivate"
             else if cfTypeId == AXValueGetTypeID()
                 type = AXValueGetType(val)
         }
-        if type == KAXValueCGPointType
+        if type == KAXValueCGPointType {
             AXValueGetValue(val, KAXValueCGPointType, ret = TQPointer toNSPoint)
-        else if type == KAXValueCGSizeType
+            ret = ret value
+        } else if type == KAXValueCGSizeType {
             AXValueGetValue(val, KAXValueCGSizeType,  ret = TQPointer toNSSize)
-        else if type == KAXValueCGRectType
+            ret = ret value
+        } else if type == KAXValueCGRectType {
             AXValueGetValue(val, KAXValueCGRectType,  ret = TQPointer toNSRect)
-        else if val isKindOfClass: NSArray
-            ^val map: `item| AccessibilityElement withAXElement: item`
+            ret = ret value
+        } else if val isKindOfClass: NSArray
+            ret = val map: `item| AccessibilityElement withAXElement: item`
         else
-            ^val
-        ^ret value
+            ret = val
+        ^CFEqual(ret, KCFNull) ? nil ! ret
     }
     - setPointAttribute: val forKey: key {
         self[key] = AXValueCreate(KAXValueCGPointType, TQPointer to: val withType: "{__NSPoint=dd}")
@@ -83,6 +86,7 @@ import "CGSPrivate"
     - description `"<AccessibilityApplication: '«self[@AXTitle]»' «self pid»>"`
 }
 
+min = `a,b| a > b ? b ! a`
 #AccessibilityWindow < AccessibilityElement {
     + frontMostWindow {
         system = AccessibilityElement systemWide
@@ -91,21 +95,63 @@ import "CGSPrivate"
             ^nil
         ^app[@AXFocusedWindow]
     }
-    - frame `[self[@AXPosition], self[@AXSize]]`
-    - setFrame: f     `self; setPosition: f[0]; setSize: f[1]`
+
+    - frame {
+        pos  = self[@AXPosition]
+        size = self[@AXSize]
+        ^(pos && size) ? [pos, size] ! nil
+    }
+    - setFrame: f     `self setFrame: f onScreen: self screen`
     - setPosition: p  `self setPointAttribute: p forKey: @AXPosition`
     - setSize: s      `self setSizeAttribute: s  forKey: @AXSize`
-    - isResizable {
-        ^self isAttrWritable: @AXSize
+    - isResizable     `self isAttrWritable: @AXSize`
+    - isMovable       `self isAttrWritable: @AXPosition`
+    - setFrame: f onScreen: screen {
+        curr = self frame
+        frame1 = [
+            [ min(f[0][0], curr[0][0]), min(f[0][1], curr[0][1]) ],
+            [ min(f[1][0], curr[1][0]), min(f[1][1], curr[1][1]) ]
+        ]
+        self; setPosition: frame1[0];
+                  setSize: frame1[1]
+        `self setPosition: f[0]` unless: NSEqualPoints(f[0], frame1[0])
+        `self     setSize: f[1]` unless: NSEqualSizes(f[1], frame1[1])
     }
-    - isMovable {
-        ^self isAttrWritable: @AXPosition
-    }
+
     - raise {
         GetProcessForPID(self pid, psn = TQPointer toVoid)
         SetFrontProcess(psn)
         err = AXUIElementPerformAction(#axElement, @AXRaise)
     }
+
+    - screen {
+        result     = nil
+        winFrame   = self frame
+        mainScreen = NSScreen mainScreen
+        \ If the frame is unavailable we are no longer on screen
+        if winFrame == nil
+            ^#cachedScreen || mainScreen
+
+        mainFrame  = mainScreen frame 
+        maxContainedPercentage = 0
+
+        NSScreen screens each: { screen |
+            \ Accessibility operates in top left coords => we need to flip the origin
+            screenFrame = screen flippedFrameRelativeTo: mainFrame
+            if NSContainsRect(screenFrame, winFrame) {
+                result = screen
+                ^nothing
+            }
+            intersection = NSIntersectionRect(screenFrame, winFrame)
+            percentage = (intersection[0][1]*intersection[1][1]) / (winFrame[0][1]*winFrame[1][1])
+            if percentage >= maxContainedPercentage {
+                maxContainedPercentage = percentage
+                result = screen
+            }
+        }
+        ^#cachedScreen = result || mainScreen
+    }
+
     \ Tries to use private CoreGraphics functions to discover the window level, just returns 0 (default) if it can't
     - level {
         GetProcessForPID(self pid, psn = TQPointer toVoid)
@@ -116,13 +162,13 @@ import "CGSPrivate"
         appConnection = temp value
 
         CGSGetWindowCount(connection, appConnection, temp = TQPointer toInt)
-        windowList = TQPointer withType: @i count: temp value
+        windowList  = TQPointer withType: @i count: temp value
         CGSGetWindowList(connection, appConnection, temp value, windowList, temp)
         windowCount = temp value
 
-        frame = TQPointer toNSRect
+        frame    = TQPointer toNSRect
         ourFrame = self frame
-        level = 0
+        level    = 0
         0 to: (windowCount-1); each: { i |
             CGSGetScreenRectForWindow(connection, windowList[i], frame)
             if NSEqualRects(ourFrame, frame value) {
@@ -137,4 +183,13 @@ import "CGSPrivate"
         frame = self frame
         ^"<AccessibilityWindow: '«self[@AXTitle]»' («frame[0][0]», «frame[0][1]»), («frame[1][0]», «frame[1][1]»)>"
     }
+}
+
+#NSScreen {
+    - flippedFrameRelativeTo: mainFrame {
+        frame = self frame
+        frame[0][1] = -frame[0][1] + (mainFrame[1][1] - frame[1][1])
+        ^frame
+    }
+    - flippedFrame `self flippedFrameRelativeTo: (NSScreen mainScreen frame)`
 }
