@@ -27,7 +27,9 @@ if key = hotkeys[@SelectNext] {
 
 if key = hotkeys[@Swap] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm swapWithCounterpart: AccessibilityWindow frontMostWindow
+        win = AccessibilityWindow frontMostWindow
+        "frontmost: «win» scr: «win screen» «NSStringFromRect(win screen flippedFrame)»" print
+        wm swapWithCounterpart: win
         wm reflow
     }
 }
@@ -77,6 +79,34 @@ if key = hotkeys[@FewerMasters] {
 if key = hotkeys[@CycleLayouts] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         wm; cycleLayouts; reflow
+    }
+}
+
+if key = hotkeys[@ToDisplay1] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        screens = NSScreen screens
+        if screens count >= 1 {
+            wm moveWindow: AccessibilityWindow frontMostWindow toScreen: screens[0]
+            wm reflow
+        }
+    }
+}
+if key = hotkeys[@ToDisplay2] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        screens = NSScreen screens
+        if screens count >= 2 {
+            wm moveWindow: AccessibilityWindow frontMostWindow toScreen: screens[1]
+            wm reflow
+        }
+    }
+}
+if key = hotkeys[@ToDisplay3] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        screens = NSScreen screens
+        if screens count >= 3 {
+            wm moveWindow: AccessibilityWindow frontMostWindow toScreen: screens[2]
+            wm reflow
+        }
     }
 }
 

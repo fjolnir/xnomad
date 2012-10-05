@@ -60,7 +60,7 @@ import "Layouts"
         }
         \ Watch for new window notifications
         app observe: @AXWindowCreated on: app with: { newWindow |
-            self; addWindow: newWindow; reflow
+            ~self; addWindow: newWindow; reflow
         }
     }
 
@@ -78,13 +78,13 @@ import "Layouts"
 
         app = self applicationWithPID: window pid
         app observe: @AXUIElementDestroyed on: window with: { _ |
-            self; removeWindow: window; reflow
+            ~self; removeWindow: window; reflow
         }
         app observe: @AXWindowMiniaturized on: window with: { _ |
-            self; deactivateWindow: window; reflow
+            ~self; deactivateWindow: window; reflow
         }
         app observe: @AXWindowDeminiaturized on: window with: { _ |
-            self; activateWindow: window; reflow
+            ~self; activateWindow: window; reflow
         }
         ^valid
     }
@@ -188,10 +188,12 @@ import "Layouts"
     - swapWithCounterpart: window
     {
         \ Get the existing reference managing the same physical window
-        idx = #activeWindows indexOf: window
+        screen = window screen
+        windows = self managedWindowsForScreen: screen
+        idx = windows indexOf: window
         isOnLeft = idx < #windowsInMaster
 
-        winCount = #activeWindows count
+        winCount = windows count
         if isOnLeft {
             otherIdx = #windowsInMaster + (winCount - #windowsInMaster) * (idx / #windowsInMaster)
             if (idx / #windowsInMaster) >= 0.5
@@ -199,7 +201,28 @@ import "Layouts"
         } else
             otherIdx = #windowsInMaster * ((idx - #windowsInMaster) / (winCount - #windowsInMaster))
 
-        self swapWindow: window with: #activeWindows[otherIdx]
+        self swapWindow: window with: windows[otherIdx]
+    }
+
+    - moveWindow: window toScreen: destScreen
+    {
+        srcScreen = window screen
+        if srcScreen == destScreen
+            ^nil
+
+        self markScreenForReflowing: srcScreen
+        self markScreenForReflowing: destScreen
+
+        #activeWindows removeObject: window
+        #activeWindows insert: window at: 0
+
+        screenFrame = destScreen flippedFrame
+        windowsOnDestScreen = self managedWindowsForScreen: destScreen
+        if windowsOnDestScreen count > 0 {
+            currentlyFocused = windowsOnDestScreen[0]
+            window setFrame: currentlyFocused frame
+        } else
+            window setFrame: screenFrame
     }
 
     - ratioForScreen: screen `#ratios[screen] || #defaultRatio`

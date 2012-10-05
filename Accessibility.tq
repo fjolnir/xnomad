@@ -16,8 +16,8 @@ import "CGSPrivate"
         ret#axElement = element
         ^ret
     }
-    + systemWide   `self withAXElement: AXUIElementCreateSystemWide() autorelease`
-    + withPID: pid `self withAXElement: AXUIElementCreateApplication(pid) autorelease`
+    + systemWide   `self withAXElement: (AXUIElementCreateSystemWide() autorelease)`
+    + withPID: pid `self withAXElement: (AXUIElementCreateApplication(pid) autorelease)`
 
 
     - []: key {
