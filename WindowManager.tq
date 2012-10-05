@@ -67,12 +67,15 @@ import "Layouts"
     - addWindow: window `self addWindow: window active: yes`
     - addWindow: window active: isActive
     {
-        self markScreenForReflowing: window screen
-        unless (window isKindOfClass: AccessibilityWindow) && (window isResizable)
+        unless window isKindOfClass: AccessibilityWindow
             ^nil
+
+        self markScreenForReflowing: window screen
+        unless window isResizable
+            ^nil
+
         if isActive && window[@AXMinimized] != 1 {
             #activeWindows insert: window at: 0
-            "screen: «window screen»: «NSStringFromRect(window screen flippedFrame)»" print
         } else
             #inactiveWindows << window
 
@@ -109,6 +112,8 @@ import "Layouts"
     }
     - removeWindow: window
     {
+        \ We need to get the original reference in order to access the cached screen
+        window = #activeWindows find: `w| w == window`
         self markScreenForReflowing: window screen
         #activeWindows   -= [window]
         #inactiveWindows -= [window]
