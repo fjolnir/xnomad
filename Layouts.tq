@@ -36,11 +36,8 @@ min = `a,b| (a > b) ? b ! a`
         windows     = wm managedWindowsForScreen: screen
         screenFrame = screen flippedFrame
 
-        "------- REFLOW «NSStringFromRect(screenFrame)»" print
-        windows print
-
         left = screenFrame[0][0]
-        top  = screenFrame[0][1] + 22
+        top  = screenFrame[0][1]
 
         leftCount  = min(windows count, wm#windowsInMaster)
         rightCount = (windows count) - leftCount
@@ -83,14 +80,16 @@ min = `a,b| (a > b) ? b ! a`
         screenFrame = screen flippedFrame
 
         left = screenFrame[0][0]
-        top  = screenFrame[0][1] + 22
+        top  = screenFrame[0][1]
 
         count = min(windows count, wm#windowsInMaster)
-        w = screenFrame[1][0] / count
-        h = screenFrame[1][1]
-        0 to: (count-1); each: `i| windows[i] setFrame: [[left + w*i, top], [w, h]]`
-        \ Move the others out of the way (Too bad the accessibility api doesn't allow setting window levels, or hiding windows)
-        (1*count) to: (wm#windowsInMaster); each: `i| windows[i] setPosition: [-screenFrame[1][0], screenFrame[1][1]]`
+        if count > 0 {
+            w = screenFrame[1][0] / count
+            h = screenFrame[1][1]
+            0 to: (count-1); each: `i| windows[i] setFrame: [[left + w*i, top], [w, h]]`
+            \ Move the others out of the way (Too bad the accessibility api doesn't allow setting window levels, or hiding windows)
+            (1*count) to: (wm#windowsInMaster); each: `i| windows[i] setPosition: [-screenFrame[1][0], top]`
+        }
     }
 }
 
