@@ -204,6 +204,11 @@ import "Layouts"
         self swapWindow: window with: windows[otherIdx]
     }
 
+
+    - focusOnScreen: screen
+    {
+        (self managedWindowsForScreen: screen) first raise
+    }
     - moveWindow: window toScreen: destScreen
     {
         srcScreen = window screen
