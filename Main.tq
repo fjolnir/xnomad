@@ -63,14 +63,16 @@ if key = hotkeys[@DecreaseRatio] {
 
 if key = hotkeys[@MoreMasters] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm#windowsInMaster += 1
+        screen = AccessibilityWindow frontMostWindow screen
+        wm setMaxMasters: (wm maxMastersOnScreen: screen) + 1 onScreen: screen
         wm reflow
     }
 }
 
 if key = hotkeys[@FewerMasters] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        `wm#windowsInMaster -= 1` if: wm#windowsInMaster > 1
+        screen = AccessibilityWindow frontMostWindow screen
+        wm setMaxMasters: (wm maxMastersOnScreen: screen) - 1 onScreen: screen
         wm reflow
     }
 }

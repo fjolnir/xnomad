@@ -14,10 +14,12 @@ import "Layouts"
     accessor: @windowsInMaster          initialValue: 1
     accessor: @screensThatNeedReflowing initialValue: []
     accessor: @defaultRatio             initialValue: 0.7
+    accessor: @defaultMaxMasters        initialValue: 1
 
     - init
     {
         #currLayouts = {}
+        #maxMasters  = {}
         #ratios      = {}
         NSScreen screens each: `screen| currLayouts[screen] = 0`
 
@@ -196,15 +198,16 @@ import "Layouts"
         screen = window screen
         windows = self managedWindowsForScreen: screen
         idx = windows indexOf: window
-        isOnLeft = idx < #windowsInMaster
+        masterCount = self maxMastersOnScreen: screen
+        isOnLeft = idx < masterCount
 
         winCount = windows count
         if isOnLeft {
-            otherIdx = #windowsInMaster + (winCount - #windowsInMaster) * (idx / #windowsInMaster)
-            if (idx / #windowsInMaster) >= 0.5
+            otherIdx = masterCount + (winCount - masterCount) * (idx / masterCount)
+            if (idx / masterCount) >= 0.5
                 otherIdx = otherIdx ceil
         } else
-            otherIdx = #windowsInMaster * ((idx - #windowsInMaster) / (winCount - #windowsInMaster))
+            otherIdx = masterCount * ((idx - masterCount) / (winCount - masterCount))
 
         self swapWindow: window with: windows[otherIdx]
     }
@@ -238,7 +241,18 @@ import "Layouts"
     - ratioForScreen: screen `#ratios[screen] || #defaultRatio`
     - setRatio: ratio forScreen: screen
     {
-        #ratios[screen] = ratio
-        self markScreenForReflowing: screen
+        if (ratio > 0) && (ratio < 1) {
+            #ratios[screen] = ratio
+            self markScreenForReflowing: screen
+        }
+    }
+
+    - maxMastersOnScreen: screen `#maxMasters[screen] || #defaultMaxMasters`
+    - setMaxMasters: max onScreen: screen
+    {
+        if max > 0 {
+            #maxMasters[screen] = max
+            self markScreenForReflowing: screen
+        }
     }
 }

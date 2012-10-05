@@ -35,25 +35,27 @@ min = `a,b| (a > b) ? b ! a`
     {
         windows     = wm managedWindowsForScreen: screen
         screenFrame = screen flippedFrame
+        masterCount = wm maxMastersOnScreen: screen
 
         left = screenFrame[0][0]
         top  = screenFrame[0][1]
 
-        leftCount  = min(windows count, wm#windowsInMaster)
+        leftCount  = min(windows count, masterCount)
         rightCount = (windows count) - leftCount
         split = screenFrame[1][0]
-        `split *= wm ratioForScreen: screen` unless: (windows count) <= wm#windowsInMaster
+        `split *= wm ratioForScreen: screen` unless: (windows count) <= masterCount
 
         i = 0
         windows each: { win |
-            if i < wm#windowsInMaster {
+            if i < masterCount {
                 h = screenFrame[1][1] / leftCount
                 y = top + h*i
+                masterCount = wm maxMastersOnScreen: screen
                 frame = [[left, y], [split, h]]
                 win setFrame: frame
             } else {
                 h = screenFrame[1][1] / rightCount
-                y = top + h*(i - wm#windowsInMaster)
+                y = top + h*(i - masterCount)
                 frame = [[left + split, y], [screenFrame[1][0] - split, h]]
                 win setFrame: frame
             }
@@ -71,24 +73,25 @@ min = `a,b| (a > b) ? b ! a`
     - prepare: wm
     {
         super prepare: wm
-        0 to: (wm#windowsInMaster-1); each: `i| wm#activeWindows[i] raise`
+\        0 to: (wm masterCount-1); each: `i| wm#activeWindows[i] raise`
     }
 
-    - maxIdx: wm `wm#windowsInMaster - 1`
+    - maxIdx: wm `masterCount - 1`
     - reflow: wm screen: screen {
         windows     = wm managedWindowsForScreen: screen
         screenFrame = screen flippedFrame
+        masterCount = wm maxMastersOnScreen: screen
 
         left = screenFrame[0][0]
         top  = screenFrame[0][1]
 
-        count = min(windows count, wm#windowsInMaster)
+        count = min(windows count, masterCount)
         if count > 0 {
             w = screenFrame[1][0] / count
             h = screenFrame[1][1]
             0 to: (count-1); each: `i| windows[i] setFrame: [[left + w*i, top], [w, h]]`
             \ Move the others out of the way (Too bad the accessibility api doesn't allow setting window levels, or hiding windows)
-            (1*count) to: (wm#windowsInMaster); each: `i| windows[i] setPosition: [-screenFrame[1][0], top]`
+            (1*count) to: (masterCount); each: `i| windows[i] setPosition: [-screenFrame[1][0], top]`
         }
     }
 }
