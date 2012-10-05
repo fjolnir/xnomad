@@ -5,7 +5,7 @@ import "JSON"
 prefs = parseJSONFile("~/.xnomad")
 
 wm = WindowManager new
-wm#ratio           = prefs[@Ratio] || 0.7
+wm#defaultRatio    = prefs[@Ratio] || 0.7
 wm#windowsInMaster = prefs[@WindowsInMaster] || 1
 wm reflow
 
@@ -46,14 +46,16 @@ if key = hotkeys[@SwapNext] {
 
 if key = hotkeys[@IncreaseRatio] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm#ratio += 0.05
+        screen = AccessibilityWindow frontMostWindow screen
+        wm setRatio: (wm ratioForScreen: screen) + 0.05 forScreen: screen
         wm reflow
     }
 }
 
 if key = hotkeys[@DecreaseRatio] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm#ratio -= 0.05
+        screen = AccessibilityWindow frontMostWindow screen
+        wm setRatio: (wm ratioForScreen: screen) - 0.05 forScreen: screen
         wm reflow
     }
 }

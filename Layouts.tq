@@ -45,7 +45,7 @@ min = `a,b| (a > b) ? b ! a`
         leftCount  = min(windows count, wm#windowsInMaster)
         rightCount = (windows count) - leftCount
         split = screenFrame[1][0]
-        `split *= wm#ratio` unless: (windows count) <= wm#windowsInMaster
+        `split *= wm ratioForScreen: screen` unless: (windows count) <= wm#windowsInMaster
 
         i = 0
         windows each: { win |

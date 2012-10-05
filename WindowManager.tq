@@ -11,13 +11,14 @@ import "Layouts"
     accessor: @applications             initialValue: []
     accessor: @activeWindows            initialValue: []
     accessor: @inactiveWindows          initialValue: []
-    accessor: @ratio                    initialValue: 0.6
     accessor: @windowsInMaster          initialValue: 1
     accessor: @screensThatNeedReflowing initialValue: []
+    accessor: @defaultRatio             initialValue: 0.7
 
     - init
     {
         #currLayouts = {}
+        #ratios      = {}
         NSScreen screens each: `screen| currLayouts[screen] = 0`
 
         #layouts = [TallLayout new, FullscreenLayout new]
@@ -202,4 +203,10 @@ import "Layouts"
         self swapWindow: window with: #activeWindows[otherIdx]
     }
 
+    - ratioForScreen: screen `#ratios[screen] || #defaultRatio`
+    - setRatio: ratio forScreen: screen
+    {
+        #ratios[screen] = ratio
+        self markScreenForReflowing: screen
+    }
 }
