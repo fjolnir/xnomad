@@ -24,6 +24,5 @@ In order to build xnomad you'll first need to install [tranquil](https://github.
 
 ##todo
 
-* Multi-monitor support
 * Additional layouts (Widescreen, etc..)
 * Probably some other things I can't recall right now
