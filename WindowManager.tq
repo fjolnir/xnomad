@@ -67,13 +67,12 @@ import "Layouts"
     - addWindow: window `self addWindow: window active: yes`
     - addWindow: window active: isActive
     {
-        subrole = window[@AXSubrole]
+        self markScreenForReflowing: window screen
         unless (window isKindOfClass: AccessibilityWindow) && (window isResizable)
             ^nil
         if isActive && window[@AXMinimized] != 1 {
             #activeWindows insert: window at: 0
             "screen: «window screen»: «NSStringFromRect(window screen flippedFrame)»" print
-            self markScreenForReflowing: window screen
         } else
             #inactiveWindows << window
 
