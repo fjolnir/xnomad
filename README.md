@@ -21,8 +21,3 @@ In order to make the most of xnomad, I recommend you also install [afloat](http:
 ##building
 
 In order to build xnomad you'll first need to install [tranquil](https://github.com/fjolnir/tranquil). Then you can simply write (assuming you added /usr/local/tranquil/bin to your PATH) `tqc Main.tq -framework Carbon -o xnomad` and a binary will appear.
-
-##todo
-
-* Additional layouts (Widescreen, etc..)
-* Probably some other things I can't recall right now
