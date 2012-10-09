@@ -5,8 +5,7 @@ A tiling window manager for OS X; written in [tranquil](https://github.com/fjoln
 
 ##setup
 
-Download the binary ("Downloads" in the top left)
-copy xnomad.default to ~/.xnomad
+[Download](https://github.com/fjolnir/xnomad/downloads) a binary and copy `xnomad.default` to `~/.xnomad`
 
 And then just execute xnomad, your windows will be snapped in place
 
