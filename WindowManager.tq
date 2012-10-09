@@ -141,7 +141,9 @@ import "Layouts"
     }
     - removeApplicationWithPID: pid
     {
-        #activeWindows = #activeWindows select: `win| (win pid) != pid`
+        windowsToRemove = #activeWindows select: `win| (win pid) == pid`
+        windowsToRemove each: `w| self markScreenForReflowing: w screen`
+        #activeWindows -= windowsToRemove
         #applications  = #applications  select: `app| (app pid) != pid`
     }
 
