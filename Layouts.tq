@@ -40,21 +40,21 @@ min = `a,b| (a > b) ? b ! a`
         left = screenFrame[0][0]
         top  = screenFrame[0][1]
 
-        leftCount  = min(windows count, masterCount)
-        rightCount = (windows count) - leftCount
+        masterCount  = min(windows count, masterCount)
+        subCount = (windows count) - masterCount
         split = screenFrame[1][0]
         `split *= wm ratioForScreen: screen` unless: (windows count) <= masterCount
 
         i = 0
         windows each: { win |
             if i < masterCount {
-                h = screenFrame[1][1] / leftCount
+                h = screenFrame[1][1] / masterCount
                 y = top + h*i
                 masterCount = wm maxMastersOnScreen: screen
                 frame = [[left, y], [split, h]]
                 win setFrame: frame
             } else {
-                h = screenFrame[1][1] / rightCount
+                h = screenFrame[1][1] / subCount
                 y = top + h*(i - masterCount)
                 frame = [[left + split, y], [screenFrame[1][0] - split, h]]
                 win setFrame: frame
@@ -63,9 +63,39 @@ min = `a,b| (a > b) ? b ! a`
         }
     }
 }
-#WideLayout < TallLayout
+#WideLayout < Layout
 {
-    
+    - reflow: wm screen: screen
+    {
+        windows     = wm managedWindowsForScreen: screen
+        screenFrame = screen flippedFrame
+        masterCount = wm maxMastersOnScreen: screen
+
+        left = screenFrame[0][0]
+        top  = screenFrame[0][1]
+
+        masterCount  = min(windows count, masterCount)
+        subCount = (windows count) - masterCount
+        split = screenFrame[1][1]
+        `split *= wm ratioForScreen: screen` unless: (windows count) <= masterCount
+
+        i = 0
+        windows each: { win |
+            if i < masterCount {
+                w = screenFrame[1][0] / masterCount
+                x = left + w*i
+                masterCount = wm maxMastersOnScreen: screen
+                frame = [[x, top], [w, split]]
+                win setFrame: frame
+            } else {
+                w = screenFrame[1][0] / subCount
+                x = left + w*(i - masterCount)
+                frame = [[x, top + split], [w, screenFrame[1][1] - split]]
+                win setFrame: frame
+            }
+            ++i
+        }
+    }
 }
 
 #FullscreenLayout < Layout

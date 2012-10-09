@@ -23,7 +23,7 @@ import "Layouts"
         #ratios      = {}
         NSScreen screens each: `screen| currLayouts[screen] = 0`
 
-        #layouts = [TallLayout new, FullscreenLayout new]
+        #layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { runningApp |
