@@ -171,9 +171,10 @@ import "Layouts"
 
     - windowBefore: win `self currentLayoutForScreen: win screen; windowBefore: win inWm: self`
     - windowAfter:  win `self currentLayoutForScreen: win screen; windowAfter: win inWm: self`
+    - focusOnWindow:  win `self currentLayoutForScreen: win screen; focusOnWindow: win inWm: self`
 
-    - selectPreviousWindow: window `self windowBefore: window; raise`
-    - selectNextWindow: window     `self  windowAfter: window; raise`
+    - selectPreviousWindow: window `self focusOnWindow: (self windowBefore: window)`
+    - selectNextWindow: window     `self focusOnWindow: (self windowAfter: window)`
 
     - swapWindow: a with: b
     {
