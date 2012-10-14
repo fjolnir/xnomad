@@ -13,9 +13,7 @@ import "Carbon"
             @pageDown   => 121, @pageUp     => 116,
             @delete     => 117, @insert     => 114,
             @backspace  => 51,  @return     => 36,
-            @tab        => 48,  @capsLock   => 57,
-            @","        => 43,  @"."        => 47,
-            @" "        => 49
+            @tab        => 48,  @capsLock   => 57
         }
         #modifierMasks  = {
             @option  => 1 lshift: 11,
@@ -84,7 +82,7 @@ import "Carbon"
             #charcodeTranslationTable = {}
             0 to: 127; each: { code |
                 str = self stringForKeycode: code
-                #charcodeTranslationTable[str] = code
+                #charcodeTranslationTable[str] ||= code
             }
         }
         ^#charcodeTranslationTable[char]

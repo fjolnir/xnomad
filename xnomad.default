@@ -12,7 +12,6 @@
         "FocusDisplay3": { "key": "r", "modifiers": [ "control" ] },
         "ToDisplay1":    { "key": "w", "modifiers": [ "control", "shift" ] },
         "ToDisplay2":    { "key": "e", "modifiers": [ "control", "shift" ] },
-        "ToDisplay3":    { "key": "r", "modifiers": [ "control", "shift" ] },
         "CycleLayouts":  { "key": " ", "modifiers": [ "control", "shift" ] },
         "IncreaseRatio": { "key": "l", "modifiers": [ "control" ] },
         "DecreaseRatio": { "key": "h", "modifiers": [ "control" ] },
