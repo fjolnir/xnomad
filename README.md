@@ -3,6 +3,8 @@ xnomad
 
 A tiling window manager for OS X; written in [tranquil](https://github.com/fjolnir/tranquil).
 
+[A screenshot of it running on my machine](http://d.asgeirsson.is/AK9w) (Along with a couple of other hacks to get rid of distractions such as the menubar & rounded corners)
+
 ##setup
 
 [Download](https://github.com/fjolnir/xnomad/downloads) a binary and copy `xnomad.default` to `~/.xnomad`
