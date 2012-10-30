@@ -26,11 +26,10 @@ import "Carbon"
     }
 
     - installEventHandler {
-        if #eventHandlerRef
-            ^nil
+        ^nil if #eventHandlerRef
+
         eventSpec    = TQPointer withType: "{?=II}" count: 1
-        eventSpec[0] = [KEventClassKeyboard, KEventHotKeyReleased] 
-        \ eventSpec[1] = [KEventClassKeyboard, KEventHotKeyPressed]
+        eventSpec[0] = [KEventClassKeyboard, KEventHotKeyReleased]
         err = InstallEventHandler(GetApplicationEventTarget(), { nextHandler, event |
             GetEventParameter(event, KEventParamDirectObject,
                               TypeEventHotKeyID, nil, 8, \ sizeof(EventHotKeyID) == 8
@@ -47,14 +46,14 @@ import "Carbon"
         modifiers each: `mod| modifierMask = modifierMask bitOr: #modifierMasks[mod]`
 
         err = RegisterEventHotKey(keycode, modifierMask,
-                                  [1414676814, #hotkeyRefs count + 1], \ 'TRAN'==1414676814
+                                  [1414676814, #hotkeyRefs count + 1], \ 'TRAN' == 1414676814
                                   GetEventDispatcherTarget(), 0,
                                   hotkeyRef = TQPointer withType: "^v")
-        if err == 0 {
-            #hotkeyRefs     << hotkeyRef value
-            #hotkeyHandlers << lambda
-            ^#hotkeyRefs count
-        }
+        ^nil if err ~= 0
+
+        #hotkeyRefs     push: hotkeyRef value
+        #hotkeyHandlers push: lambda
+        ^#hotkeyRefs count
     }
     - unregisterHotkey: key `UnregisterEventHotKey(#hotkeyRefs[key-1]) == 0`
 
@@ -76,7 +75,7 @@ import "Carbon"
         ^err == 0 ? (NSString stringWithCharacters:chars length: 1) ! nil
     }
     - characterToKeycode: char {
-        if #specialKeycodes[char]
+        if #specialKeycodes[char] then
             ^#specialKeycodes[char]
         else if #charcodeTranslationTable == nil {
             #charcodeTranslationTable = {}
@@ -90,7 +89,7 @@ import "Carbon"
 
     - dealloc {
         #hotkeyRefs each: `key| self unregisterHotkey: key`
-        `RemoveEventHandler(#eventHandlerRef)` unless: #eventHandlerRef == nil
+        RemoveEventHandler(#eventHandlerRef) unless #eventHandlerRef == nil
     }
 }
 

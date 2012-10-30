@@ -86,25 +86,19 @@ if key = hotkeys[@CycleLayouts] {
 if key = hotkeys[@FocusDisplay1] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         screens = NSScreen screens
-        if screens count >= 1 {
-            wm focusOnScreen: screens[0]
-        }
+        if screens count >= 1 then wm focusOnScreen: screens[0]
     }
 }
 if key = hotkeys[@FocusDisplay2] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         screens = NSScreen screens
-        if screens count >= 2 {
-            wm focusOnScreen: screens[1]
-        }
+        if screens count >= 2 then wm focusOnScreen: screens[1]
     }
 }
 if key = hotkeys[@FocusDisplay3] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         screens = NSScreen screens
-        if screens count >= 3 {
-            wm focusOnScreen: screens[2]
-        }
+        if screens count >= 3 then wm focusOnScreen: screens[2]
     }
 }
 

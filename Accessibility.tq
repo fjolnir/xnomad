@@ -7,17 +7,17 @@ import "CGSPrivate"
     + withAXElement: element {
         AXUIElementCopyAttributeValue(element, @AXRole, rolePtr = TQPointer toObject)
         role = rolePtr value
-        if role == @AXApplication
+        if role == @AXApplication then
             ret = AccessibilityApplication new
-        else if role == @AXWindow
+        else if role == @AXWindow then
             ret = AccessibilityWindow new
         else
             ret = AccessibilityElement new
         ret#axElement = element
         ^ret
     }
-    + systemWide   `self withAXElement: (AXUIElementCreateSystemWide() autorelease)`
-    + withPID: pid `self withAXElement: (AXUIElementCreateApplication(pid) autorelease)`
+    + systemWide   `self withAXElement: AXUIElementCreateSystemWide() autorelease`
+    + withPID: pid `self withAXElement: AXUIElementCreateApplication(pid) autorelease`
 
 
     - []: key {
@@ -26,9 +26,9 @@ import "CGSPrivate"
 
         if val isKindOfClass: __NSCFType {
             cfTypeId = CFGetTypeID(val)
-            if cfTypeId == AXUIElementGetTypeID() 
+            if cfTypeId == AXUIElementGetTypeID() then
                 ^AccessibilityElement withAXElement: val
-            else if cfTypeId == AXValueGetTypeID()
+            else if cfTypeId == AXValueGetTypeID() then
                 type = AXValueGetType(val)
         }
         if type == KAXValueCGPointType {
@@ -40,9 +40,9 @@ import "CGSPrivate"
         } else if type == KAXValueCGRectType {
             AXValueGetValue(val, KAXValueCGRectType,  ret = TQPointer toNSRect)
             ret = ret value
-        } else if val isKindOfClass: NSArray
+        } else if val isKindOfClass: NSArray {
             ret = val map: `item| AccessibilityElement withAXElement: item`
-        else
+        } else
             ret = val
         ^CFEqual(ret, KCFNull) ? nil ! ret
     }
@@ -56,11 +56,10 @@ import "CGSPrivate"
         ^AXUIElementSetAttributeValue(#axElement, key, val) == 0
     }
     - isAttrWritable: key {
-        ^(AXUIElementIsAttributeSettable(#axElement, key, res = TQPointer toChar) == 0) && (res value == 1)
+        ^AXUIElementIsAttributeSettable(#axElement, key, res = TQPointer toChar) == 0 && res value == 1
     }
     - pid {
-        if #cachedPid
-            ^#cachedPid
+        ^#cachedPid if #cachedPid
         AXUIElementGetPid(#axElement, pidPtr = TQPointer toInt)
         ^#cachedPid = pidPtr value
     }
@@ -80,7 +79,7 @@ import "CGSPrivate"
             CFRunLoopAddSource(NSRunLoop currentRunLoop getCFRunLoop, AXObserverGetRunLoopSource(#observer), KCFRunLoopDefaultMode)
         }
         lambda = lambda copy
-        #notificationCallbacks << lambda \ Since we are passing it to a simple void* we need to keep a reference to the callback
+        #notificationCallbacks push: lambda \ Since we are passing it to a simple void* we need to keep a reference to the callback
         AXObserverAddNotification(#observer, element axElement, notification, lambda)
     }
     - description `"<AccessibilityApplication: '«self[@AXTitle]»' «self pid»>"`
@@ -91,8 +90,6 @@ min = `a,b| a > b ? b ! a`
     + frontMostWindow {
         system = AccessibilityElement systemWide
         app    = system[@AXFocusedApplication]
-        unless app
-            ^nil
         ^app[@AXFocusedWindow]
     }
 
@@ -114,8 +111,8 @@ min = `a,b| a > b ? b ! a`
         ]
         self; setPosition: frame1[0];
                   setSize: frame1[1]
-        `self setPosition: f[0]` unless: NSEqualPoints(f[0], frame1[0])
-        `self     setSize: f[1]` unless: NSEqualSizes(f[1], frame1[1])
+        self setPosition: f[0] unless NSEqualPoints(f[0], frame1[0])
+        self     setSize: f[1] unless NSEqualSizes(f[1], frame1[1])
     }
 
     - raise {
@@ -129,10 +126,9 @@ min = `a,b| a > b ? b ! a`
         winFrame   = self frame
         mainScreen = NSScreen mainScreen
         \ If the frame is unavailable we are no longer on screen
-        if winFrame == nil
-            ^#cachedScreen || mainScreen
+        ^#cachedScreen || mainScreen if winFrame == nil
 
-        mainFrame  = mainScreen frame 
+        mainFrame  = mainScreen frame
         maxContainedPercentage = 0
 
         NSScreen screens each: { screen |
@@ -143,7 +139,7 @@ min = `a,b| a > b ? b ! a`
                 ^nothing
             }
             intersection = NSIntersectionRect(screenFrame, winFrame)
-            percentage = (intersection[1][0]*intersection[1][1]) / (winFrame[1][0]*winFrame[1][1])
+            percentage = (intersection[1][0] * intersection[1][1]) / (winFrame[1][0] * winFrame[1][1])
             if percentage >= maxContainedPercentage {
                 maxContainedPercentage = percentage
                 result = screen
@@ -157,8 +153,7 @@ min = `a,b| a > b ? b ! a`
         GetProcessForPID(self pid, psn = TQPointer toVoid)
         connection = _CGSDefaultConnection()
         err = CGSGetConnectionIDForPSN(connection, psn, temp = TQPointer toInt)
-        if err != 0
-            ^nil
+        ^nil if err ~= 0
         appConnection = temp value
 
         CGSGetWindowCount(connection, appConnection, temp = TQPointer toInt)
@@ -169,7 +164,7 @@ min = `a,b| a > b ? b ! a`
         frame    = TQPointer toNSRect
         ourFrame = self frame
         level    = 0
-        0 to: (windowCount-1); each: { i |
+        0 to: windowCount-1; each: { i |
             CGSGetScreenRectForWindow(connection, windowList[i], frame)
             if NSEqualRects(ourFrame, frame value) {
                 CGSGetWindowLevel(connection, windowList[i], temp)
@@ -191,5 +186,5 @@ min = `a,b| a > b ? b ! a`
         frame[0][1] = -frame[0][1] + (mainFrame[1][1] - frame[1][1])
         ^frame
     }
-    - flippedFrame `self flippedFrameRelativeTo: (NSScreen mainScreen frame)`
+    - flippedFrame `self flippedFrameRelativeTo: NSScreen mainScreen frame`
 }

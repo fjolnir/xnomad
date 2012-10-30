@@ -27,7 +27,7 @@ import "Layouts"
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { runningApp |
-            unless runningApp bundleIdentifier hasPrefix: "com.apple.dashboard"
+            unless runningApp bundleIdentifier hasPrefix: "com.apple.dashboard" then
                 self addApplicationWithPID: runningApp processIdentifier
         }
         \self currentLayout prepare: self
@@ -50,12 +50,10 @@ import "Layouts"
     }
     - addApplicationWithPID: pid
     {
-        if (self applicationWithPID: pid)
-            ^nil
+        ^nil if self applicationWithPID: pid
         app = AccessibilityElement withPID: pid
-        unless app isKindOfClass: AccessibilityApplication
-            ^nil
-        #applications << app
+        ^nil unless app isKindOfClass: AccessibilityApplication
+        #applications push: app
 
         app[@AXWindows] each: { window |
             self addWindow: window active: (app[@AXHidden] == 0)
@@ -69,26 +67,24 @@ import "Layouts"
     - addWindow: window `self addWindow: window active: yes`
     - addWindow: window active: isActive
     {
-        unless window isKindOfClass: AccessibilityWindow
-            ^nil
+        ^nil unless window isKindOfClass: AccessibilityWindow
 
         self markScreenForReflowing: window screen
-        unless window isResizable
-            ^nil
+        ^nil unless window isResizable
 
-        if isActive && window[@AXMinimized] != 1 {
+        if isActive && window[@AXMinimized] ~= 1 {
             #activeWindows insert: window at: 0
         } else
-            #inactiveWindows << window
+            #inactiveWindows push: window
 
         app = self applicationWithPID: window pid
-        app observe: @AXUIElementDestroyed on: window with: { _ |
+        app observe: @AXUIElementDestroyed on: window with: { w |
             ~self; removeWindow: window; reflow
         }
-        app observe: @AXWindowMiniaturized on: window with: { _ |
+        app observe: @AXWindowMiniaturized on: window with: { w |
             ~self; deactivateWindow: window; reflow
         }
-        app observe: @AXWindowDeminiaturized on: window with: { _ |
+        app observe: @AXWindowDeminiaturized on: window with: { w |
             ~self; activateWindow: window; reflow
         }
         ^valid
@@ -127,7 +123,7 @@ import "Layouts"
         activated each: { window |
             self markScreenForReflowing: window screen
             #inactiveWindows removeObject: window
-            #activeWindows << window
+            #activeWindows push: window
         }
     }
     - deactivateApplicationWithPID: pid
@@ -136,7 +132,7 @@ import "Layouts"
         deactivated each: { window |
             self markScreenForReflowing: window screen
             #activeWindows removeObject: window
-            #inactiveWindows << window
+            #inactiveWindows push: window
         }
     }
     - removeApplicationWithPID: pid
@@ -144,13 +140,13 @@ import "Layouts"
         windowsToRemove = #activeWindows select: `win| (win pid) == pid`
         windowsToRemove each: `w| self markScreenForReflowing: w screen`
         #activeWindows -= windowsToRemove
-        #applications  = #applications  select: `app| (app pid) != pid`
+        #applications  = #applications  select: `app| (app pid) ~= pid`
     }
 
     - currentLayoutForScreen: screen `#layouts[#currLayouts[screen]]`
     - markScreenForReflowing: screen
     {
-        `#screensThatNeedReflowing << screen` unless: (#screensThatNeedReflowing contains: screen)
+        #screensThatNeedReflowing push: screen unless #screensThatNeedReflowing contains: screen
     }
     - reflow
     {
@@ -163,8 +159,7 @@ import "Layouts"
     - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen`
     - cycleLayoutsForScreen: screen
     {
-        if ++#currLayouts[screen] >= #layouts count
-            #currLayouts[screen] = 0
+        #currLayouts[screen] = 0 if ++#currLayouts[screen] >= #layouts count
         self currentLayoutForScreen: screen; prepare: self
         self markScreenForReflowing: screen
     }
@@ -178,7 +173,7 @@ import "Layouts"
 
     - swapWindow: a with: b
     {
-        if a != b {
+        if a ~= b {
             idxA = #activeWindows indexOf: a
             idxB = #activeWindows indexOf: b
             #activeWindows[idxA], #activeWindows[idxB] = #activeWindows[idxB], #activeWindows[idxA]
@@ -207,8 +202,7 @@ import "Layouts"
         winCount = windows count
         if isOnLeft {
             otherIdx = masterCount + (winCount - masterCount) * (idx / masterCount)
-            if (idx / masterCount) >= 0.5
-                otherIdx = otherIdx ceil
+            otherIdx = otherIdx ceil if (idx / masterCount) >= 0.5
         } else
             otherIdx = masterCount * ((idx - masterCount) / (winCount - masterCount))
 
@@ -223,8 +217,7 @@ import "Layouts"
     - moveWindow: window toScreen: destScreen
     {
         srcScreen = window screen
-        if srcScreen == destScreen
-            ^nil
+        ^nil if srcScreen == destScreen
 
         self markScreenForReflowing: srcScreen
         self markScreenForReflowing: destScreen

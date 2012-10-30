@@ -5,7 +5,7 @@ min = `a,b| (a > b) ? b ! a`
     - prepare: wm
     {
         idx = wm#activeWindows indexOf: (AccessibilityWindow frontMostWindow)
-        if idx != -1
+        if idx ~= -1 then
             wm#activeWindows[idx], wm#activeWindows[0] = wm#activeWindows[0], wm#activeWindows[idx]
     }
 
@@ -14,9 +14,7 @@ min = `a,b| (a > b) ? b ! a`
         screen  = window screen
         windows = wm managedWindowsForScreen: screen
         idx     = windows indexOf: window
-        if idx == 0
-            ^windows last
-        ^windows[idx-1]
+        ^idx == 0 ? windows last ! windows[idx-1]
     }
     - windowAfter: window inWm: wm
     {
@@ -24,9 +22,7 @@ min = `a,b| (a > b) ? b ! a`
         windows = wm managedWindowsForScreen: screen
         count   = windows count
         idx     = windows indexOf: window
-        if idx == count-1
-            ^windows[0]
-        ^windows[idx+1]
+        ^idx == count-1 ? windows[0] ! windows[idx+1]
     }
 
     - focusOnWindow: window inWm: wm `window raise`
