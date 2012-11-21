@@ -44,6 +44,37 @@ import "Layouts"
         ^self
     }
 
+    - currentSpaceId `CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceCurrent)[0]`
+    - currentSpace
+    {
+        spaces = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceAll)
+        idx    = spaces indexOfObject: self currentSpaceId
+        ^spaces count - idx
+    }
+    - switchToSpace: idx
+    {
+        spaces       = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceAll)
+        currentSpace = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceCurrent)[0]
+        destSpace    = spaces[spaces count - idx - 1]
+        if currentSpace ~= destSpace {
+            CGSHideSpaces(_CGSDefaultConnection(), [currentSpace])
+            CGSShowSpaces(_CGSDefaultConnection(), [destSpace])
+            CGSManagedDisplaySetCurrentSpace(_CGSDefaultConnection(), KCGSPackagesMainDisplayIdentifier, destSpace)
+        }
+    }
+    \ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
+    - moveWindow: window toSpace: destSpaceIdx
+    {
+        conn   = _CGSDefaultConnection()
+        spaces = CGSCopySpaces(conn, KCGSSpaceAll)
+        srcSpace  = window spaceId
+        destSpace = spaces[destSpaceIdx]
+
+        ^nil if srcSpace == destSpace
+        CGSRemoveWindowsFromSpaces(conn, [window _cgWindow], [srcSpace])
+        CGSAddWindowsToSpaces(conn, [window _cgWindow], [destSpace])
+    }
+
     - applicationWithPID: pid
     {
         ^#applications find: `app| (app pid) == pid`
@@ -92,7 +123,7 @@ import "Layouts"
 
     - managedWindowsForScreen: screen
     {
-        ^#activeWindows select: `w| (w level == 0) && (w screen == screen)`
+        ^#activeWindows select: `w| (w level == 0) && (w screen == screen) && (w spaceId == self currentSpaceId)`
     }
     - managedWindows `self managedWindowsForScreen: nil`
 

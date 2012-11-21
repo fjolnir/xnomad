@@ -95,6 +95,25 @@ min = `a,b| a > b ? b ! a`
         ^(win isKindOfClass:AccessibilityWindow) ? win ! nil
     }
 
+    - _cgWindow
+    {
+        unless #cgWin {
+            err = _AXUIElementGetWindow(#axElement, ptr = TQPointer toInt)
+            if err ~= 0 {
+                "Couldnt get CGWindow!" print
+                ^0
+            }
+            #cgWin = ptr value
+        }
+        ^#cgWin
+    }
+    - spaceId {
+        cgWin = self _cgWindow
+        idArr = CGSCopySpacesForWindows(_CGSDefaultConnection(), KCGSSpaceAll,[NSNumber numberWithInt:cgWin])
+        ^nil unless idArr count > 0
+        ^idArr[0]
+    }
+
     - frame {
         pos  = self[@AXPosition]
         size = self[@AXSize]
@@ -150,31 +169,9 @@ min = `a,b| a > b ? b ! a`
         ^#cachedScreen = result || mainScreen
     }
 
-    \ Tries to use private CoreGraphics functions to discover the window level, just returns 0 (default) if it can't
     - level {
-        GetProcessForPID(self pid, psn = TQPointer toVoid)
-        connection = _CGSDefaultConnection()
-        err = CGSGetConnectionIDForPSN(connection, psn, temp = TQPointer toInt)
-        ^nil if err ~= 0
-        appConnection = temp value
-
-        CGSGetWindowCount(connection, appConnection, temp = TQPointer toInt)
-        windowList  = TQPointer withType: @i count: temp value
-        CGSGetWindowList(connection, appConnection, temp value, windowList, temp)
-        windowCount = temp value
-
-        frame    = TQPointer toNSRect
-        ourFrame = self frame
-        level    = 0
-        0 to: windowCount-1; each: { i |
-            CGSGetScreenRectForWindow(connection, windowList[i], frame)
-            if NSEqualRects(ourFrame, frame value) {
-                CGSGetWindowLevel(connection, windowList[i], temp)
-                level = temp value
-                ^nothing
-            }
-        }
-        ^level
+        CGSGetWindowLevel(_CGSDefaultConnection(), self _cgWindow, levelPtr = TQPointer toInt)
+        ^levelPtr value
     }
     - description {
         frame = self frame

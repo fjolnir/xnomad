@@ -15,6 +15,12 @@
         "IncreaseRatio": { "key": "l", "modifiers": [ "option", "control" ] },
         "DecreaseRatio": { "key": "h", "modifiers": [ "option", "control" ] },
         "MoreMasters":   { "key": ".", "modifiers": [ "option", "control" ] },
-        "FewerMasters":  { "key": ",", "modifiers": [ "option", "control" ] }
+        "FewerMasters":  { "key": ",", "modifiers": [ "option", "control" ] },
+        "Space1":        { "key": "1", "modifiers": [ "option", "control" ] },
+        "Space2":        { "key": "2", "modifiers": [ "option", "control" ] },
+        "Space3":        { "key": "3", "modifiers": [ "option", "control" ] },
+        "ToSpace1":      { "key": "1", "modifiers": [ "option", "control", "command" ] },
+        "ToSpace2":      { "key": "2", "modifiers": [ "option", "control", "command" ] },
+        "ToSpace3":      { "key": "3", "modifiers": [ "option", "control", "command" ] }
     }
 }
