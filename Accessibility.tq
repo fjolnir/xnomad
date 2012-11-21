@@ -91,7 +91,8 @@ min = `a,b| a > b ? b ! a`
     + frontMostWindow {
         system = AccessibilityElement systemWide
         app    = system[@AXFocusedApplication]
-        ^app[@AXFocusedWindow]
+        win    = app[@AXFocusedWindow]
+        ^(win isKindOfClass:AccessibilityWindow) ? win ! nil
     }
 
     - frame {
