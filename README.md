@@ -13,7 +13,7 @@ And then just execute xnomad, your windows will be snapped in place
 
 To learn the hotkeys, read xnomad.default
 
-**Note** that OS X 10.8 is required!
+OS X 10.7 or newer is required.
 
 ## protip
 
