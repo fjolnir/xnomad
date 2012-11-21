@@ -37,7 +37,7 @@ extern OSStatus CGSGetWindowOwner(const CGSConnection cid, const CGSWindow wid, 
 extern OSStatus CGSConnectionGetPID(const CGSConnection cid, pid_t *pid, const CGSConnection ownerCid);
 extern OSStatus CGSGetConnectionIDForPSN(const CGSConnection cid, ProcessSerialNumber *psn, CGSConnection *out);
 
-#pragma mark - Spaces
+#pragma mark - Spaces (Reverse engineered by Brian McKenna - github.com/pufuwozu)
 
 typedef uint64_t CGSSpace;
 typedef enum _CGSSpaceType {
