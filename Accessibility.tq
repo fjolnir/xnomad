@@ -74,6 +74,7 @@ import "CGSPrivate"
             AXObserverCreate(self pid, { observer, element, notification, callbackPtr |
                 callback = callbackPtr addressAsObject
                 callback call: (AccessibilityElement withAXElement: element)
+                ^nil
             }, obsPtr = TQPointer toObject)
             #observer = obsPtr value autorelease
             CFRunLoopAddSource(NSRunLoop currentRunLoop getCFRunLoop, AXObserverGetRunLoopSource(#observer), KCFRunLoopDefaultMode)

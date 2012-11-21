@@ -154,6 +154,7 @@ import "Layouts"
             self currentLayoutForScreen:screen; reflow: self screen: screen
         }
         #screensThatNeedReflowing = []
+        ^nil
     }
 
     - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen`
