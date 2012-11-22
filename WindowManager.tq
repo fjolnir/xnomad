@@ -8,40 +8,47 @@ import "Layouts"
 
 #WindowManager
 {
-    accessor: @applications             initialValue: []
-    accessor: @activeWindows            initialValue: []
-    accessor: @inactiveWindows          initialValue: []
-    accessor: @windowsInMaster          initialValue: 1
-    accessor: @screensThatNeedReflowing initialValue: []
-    accessor: @spacesThatNeedReflowing  initialValue: []
-    accessor: @defaultRatio             initialValue: 0.7
-    accessor: @defaultMaxMasters        initialValue: 1
+    accessor: @applications       initialValue: []
+    accessor: @activeWindows      initialValue: []
+    accessor: @inactiveWindows    initialValue: []
+    accessor: @windowsInMaster    initialValue: 1
+    accessor: @defaultRatio       initialValue: 0.7
+    accessor: @defaultMaxMasters  initialValue: 1
 
     - init
     {
         #currLayouts = {}
         #maxMasters  = {}
         #ratios      = {}
+        #screensThatNeedReflowing = []
+        #spacesThatNeedReflowing  = []
         NSScreen screens each: `screen| #currLayouts[screen] = {}`
 
         #layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
 
         workspace = NSWorkspace sharedWorkspace
-        workspace runningApplications each: { runningApp |
-            ^nil if runningApp bundleIdentifier hasPrefix: "com.apple.dashboard"
-            self addApplicationWithPID: runningApp processIdentifier
+        workspace runningApplications each: { app |
+             self addApplicationWithPID: app#processIdentifier unless app#bundleIdentifier hasPrefix: "com.apple.dashboard"
         }
 
-        center = workspace notificationCenter
-        adder   = `n| ~self;    addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
-        remover = `n| ~self; removeApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
-        activator   = `n| ~self;   activateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
-        deactivator = `n| ~self; deactivateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
-        center; observe: NSWorkspaceDidLaunchApplicationNotification    with: adder;
-                observe: NSWorkspaceDidTerminateApplicationNotification with: remover;
-                observe: NSWorkspaceDidUnhideApplicationNotification    with: activator;
-                observe: NSWorkspaceDidHideApplicationNotification      with: deactivator;
-                observe: NSWorkspaceActiveSpaceDidChangeNotification    with: {
+        workspace notificationCenter;
+                observe: NSWorkspaceDidLaunchApplicationNotification with: { n |
+                    ~self; addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
+                                          reflow
+                };
+                observe: NSWorkspaceDidTerminateApplicationNotification with: { n |
+                    ~self; removeApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
+                                             reflow
+                };
+                observe: NSWorkspaceDidUnhideApplicationNotification with: { n |
+                    ~self; activateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
+                                               reflow
+                };
+                observe: NSWorkspaceDidHideApplicationNotification with: { n |
+                    ~self; deactivateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
+                                                 reflow
+                };
+                observe: NSWorkspaceActiveSpaceDidChangeNotification with: { n |
                     self; markAllScreensForReflowing;
                                markSpaceForReflowing: self currentSpaceId;
                                               reflow
