@@ -40,7 +40,12 @@ import "Layouts"
         center; observe: NSWorkspaceDidLaunchApplicationNotification    with: adder;
                 observe: NSWorkspaceDidTerminateApplicationNotification with: remover;
                 observe: NSWorkspaceDidUnhideApplicationNotification    with: activator;
-                observe: NSWorkspaceDidHideApplicationNotification      with: deactivator
+                observe: NSWorkspaceDidHideApplicationNotification      with: deactivator;
+                observe: NSWorkspaceActiveSpaceDidChangeNotification    with: {
+                    self; markAllScreensForReflowing;
+                               markSpaceForReflowing: self currentSpaceId;
+                                              reflow
+                }
         ^self
     }
 
