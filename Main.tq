@@ -130,6 +130,8 @@ if key = hotkeys[@ToDisplay3] {
     }
 }
 
+\ Space shortcuts are not enabled by default because they aren't perfect yet.
+\ (You can use TotalSpaces if you want to disable the switching animation; that's what I do)
 if key = hotkeys[@Space1] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         wm switchToSpace: 0
