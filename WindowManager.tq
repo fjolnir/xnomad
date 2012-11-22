@@ -33,6 +33,7 @@ import "Layouts"
 
         workspace notificationCenter;
                 observe: NSWorkspaceDidLaunchApplicationNotification with: { n |
+                    ^nil if n#userInfo[@NSApplicationBundleIdentifier] == nil
                     ~self; addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
                                           reflow
                 };
