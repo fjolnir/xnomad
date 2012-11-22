@@ -22,7 +22,7 @@ import "Layouts"
         #currLayouts = {}
         #maxMasters  = {}
         #ratios      = {}
-        NSScreen screens each: `screen| currLayouts[screen] = 0`
+        NSScreen screens each: `screen| #currLayouts[screen] = {}`
 
         #layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
 
@@ -31,7 +31,6 @@ import "Layouts"
             ^nil if runningApp bundleIdentifier hasPrefix: "com.apple.dashboard"
             self addApplicationWithPID: runningApp processIdentifier
         }
-        \self currentLayout prepare: self
 
         center = workspace notificationCenter
         adder   = `n| ~self;    addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier); reflow`
@@ -194,7 +193,6 @@ import "Layouts"
         #applications  = #applications  select: `app| (app pid) ~= pid`
     }
 
-    - currentLayoutForScreen: screen `#layouts[#currLayouts[screen]]`
     - markAllScreensForReflowing `NSScreen screens each: { s | self markScreenForReflowing: s }`
     - markScreenForReflowing: screen
     {
@@ -213,25 +211,33 @@ import "Layouts"
         currSpace = self currentSpaceId
         ^nil unless #spacesThatNeedReflowing containsObject: currSpace
         #screensThatNeedReflowing each: { screen |
-            self currentLayoutForScreen:screen; reflow: self screen:screen spaces:[currSpace]
+            self currentLayoutForScreen:screen space:currSpace; reflow: self screen:screen spaces:[currSpace]
         }
         #screensThatNeedReflowing = []
         #spacesThatNeedReflowing -= [currSpace]
         ^nil
     }
 
-    - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen`
-    - cycleLayoutsForScreen: screen
+    - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen space: self currentSpaceId`
+    - cycleLayoutsForScreen: screen space: spaceId
     {
-        #currLayouts[screen] = 0 if ++#currLayouts[screen] >= #layouts count
-        self currentLayoutForScreen: screen; prepare: self
-        self markScreenForReflowing: screen
-        self markSpaceForReflowing: self currentSpaceId
+        layoutsForScreen = #currLayouts[screen]
+        layoutsForScreen[spaceId] ||= 0
+        layoutsForScreen[spaceId] = 0 if ++layoutsForScreen[spaceId] >= #layouts count
+        self currentLayoutForScreen:screen space:spaceId; prepare:self
+        self markScreenForReflowing:screen
+        self markSpaceForReflowing:spaceId
+    }
+    - currentLayoutForScreen: screen space: spaceId
+    {
+        layoutsForScreen = #currLayouts[screen]
+        layoutsForScreen[spaceId] ||= 0
+        ^#layouts[layoutsForScreen[spaceId]]
     }
 
-    - windowBefore: win `self currentLayoutForScreen: win screen; windowBefore: win inWm: self`
-    - windowAfter:  win `self currentLayoutForScreen: win screen; windowAfter: win inWm: self`
-    - focusOnWindow:  win `self currentLayoutForScreen: win screen; focusOnWindow: win inWm: self`
+    - windowBefore:   win `self currentLayoutForScreen: win screen space:self currentSpaceId;  windowBefore: win inWm: self`
+    - windowAfter:    win `self currentLayoutForScreen: win screen space:self currentSpaceId;   windowAfter: win inWm: self`
+    - focusOnWindow:  win `self currentLayoutForScreen: win screen space:self currentSpaceId; focusOnWindow: win inWm: self`
 
     - selectPreviousWindow: window `self focusOnWindow: (self windowBefore: window)`
     - selectNextWindow: window     `self focusOnWindow: (self windowAfter: window)`
@@ -307,6 +313,7 @@ import "Layouts"
         if (ratio > 0) && (ratio < 1) {
             #ratios[screen] = ratio
             self markScreenForReflowing: screen
+            self markSpaceForReflowing: self currentSpaceId
         }
     }
 
@@ -316,6 +323,7 @@ import "Layouts"
         if max > 0 {
             #maxMasters[screen] = max
             self markScreenForReflowing: screen
+            self markSpaceForReflowing: self currentSpaceId
         }
     }
 }
