@@ -1,4 +1,13 @@
 parseJSONFile = { path |
-    if data = NSData dataWithContentsOfFile: (path stringByExpandingTildeInPath) then
-        ^NSJSONSerialization JSONObjectWithData: data options: 0 error: nil
+    data = NSData dataWithContentsOfFile: (path stringByExpandingTildeInPath)
+    if data == nil {
+        "File '«path»' not found" print
+        ^nil
+    }
+    result = NSJSONSerialization JSONObjectWithData: data options: 0 error: (err = TQPointer toObject)
+    if err value ~= nil {
+        "Error parsing JSON at '«path»': «err value localizedDescription»" print
+        ^nil
+    }
+    ^result
 }
