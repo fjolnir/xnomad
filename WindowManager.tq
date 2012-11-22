@@ -49,9 +49,9 @@ import "Layouts"
                                                  reflow
                 };
                 observe: NSWorkspaceActiveSpaceDidChangeNotification with: { n |
-                    self; markAllScreensForReflowing;
-                               markSpaceForReflowing: self currentSpaceId;
-                                              reflow
+                    ~self; markAllScreensForReflowing;
+                                markSpaceForReflowing: self currentSpaceId;
+                                               reflow
                 }
         ^self
     }
