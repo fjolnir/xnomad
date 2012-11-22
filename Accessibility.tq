@@ -107,11 +107,12 @@ min = `a,b| a > b ? b ! a`
         }
         ^#cgWin
     }
-    - spaceId {
-        cgWin = self _cgWindow
-        idArr = CGSCopySpacesForWindows(_CGSDefaultConnection(), KCGSSpaceAll,[NSNumber numberWithInt:cgWin])
-        ^nil unless idArr count > 0
-        ^idArr[0]
+    - spaceIds {
+        ids = CGSCopySpacesForWindows(_CGSDefaultConnection(), KCGSSpaceAll,[NSNumber numberWithInt: self _cgWindow])
+        if ids == nil or ids count > 0 then
+            ^#cachedSpaceIds = ids
+        else
+            ^#cachedSpaceIds
     }
 
     - frame {

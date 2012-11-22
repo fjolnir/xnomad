@@ -12,37 +12,6 @@ wm reflow
 mgr = HotkeyManager new
 hotkeys = prefs[@Hotkeys]
 
-if key = hotkeys[@Space1] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm switchToSpace: 0
-    }
-}
-if key = hotkeys[@Space2] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm switchToSpace: 1
-    }
-}
-if key = hotkeys[@Space3] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm switchToSpace: 2
-    }
-}
-if key = hotkeys[@ToSpace1] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm moveWindow: AccessibilityWindow frontMostWindow toSpace: 0
-    }
-}
-if key = hotkeys[@ToSpace2] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm moveWindow: AccessibilityWindow frontMostWindow toSpace: 1
-    }
-}
-if key = hotkeys[@ToSpace3] {
-    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
-        wm moveWindow: AccessibilityWindow frontMostWindow toSpace: 2
-    }
-}
-
 if key = hotkeys[@SelectPrev] {
     mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
         wm selectPreviousWindow: AccessibilityWindow frontMostWindow
@@ -161,4 +130,73 @@ if key = hotkeys[@ToDisplay3] {
     }
 }
 
+if key = hotkeys[@Space1] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 0
+        wm reflow
+    }
+}
+if key = hotkeys[@Space2] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 1
+        wm reflow
+    }
+}
+if key = hotkeys[@Space3] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 2
+        wm reflow
+    }
+}
+if key = hotkeys[@Space4] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 3
+        wm reflow
+    }
+}
+if key = hotkeys[@Space5] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 4
+        wm reflow
+    }
+}
+if key = hotkeys[@Space6] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 5
+        wm reflow
+    }
+}
+if key = hotkeys[@Space7] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 6
+        wm reflow
+    }
+}
+if key = hotkeys[@Space8] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 7
+        wm reflow
+    }
+}
+if key = hotkeys[@Space9] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm switchToSpace: 8
+        wm reflow
+    }
+}
+if key = hotkeys[@ToSpace1] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm moveWindow: AccessibilityWindow frontMostWindow toSpace: 0
+    }
+}
+if key = hotkeys[@ToSpace2] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm moveWindow: AccessibilityWindow frontMostWindow toSpace: 1
+    }
+}
+if key = hotkeys[@ToSpace3] {
+    mgr registerHotkey: key[@key] withModifiers: key[@modifiers] handler: {
+        wm moveWindow: AccessibilityWindow frontMostWindow toSpace: 2
+    }
+}
 NSApplication sharedApplication run

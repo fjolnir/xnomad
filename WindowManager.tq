@@ -13,6 +13,7 @@ import "Layouts"
     accessor: @inactiveWindows          initialValue: []
     accessor: @windowsInMaster          initialValue: 1
     accessor: @screensThatNeedReflowing initialValue: []
+    accessor: @spacesThatNeedReflowing  initialValue: []
     accessor: @defaultRatio             initialValue: 0.7
     accessor: @defaultMaxMasters        initialValue: 1
 
@@ -27,8 +28,8 @@ import "Layouts"
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { runningApp |
-            unless runningApp bundleIdentifier hasPrefix: "com.apple.dashboard" then
-                self addApplicationWithPID: runningApp processIdentifier
+            ^nil if runningApp bundleIdentifier hasPrefix: "com.apple.dashboard"
+            self addApplicationWithPID: runningApp processIdentifier
         }
         \self currentLayout prepare: self
 
@@ -53,13 +54,17 @@ import "Layouts"
     }
     - switchToSpace: idx
     {
-        spaces       = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceAll)
+        spaces = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceAll)
+        ^nil if spaces count <= idx
         currentSpace = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceCurrent)[0]
         destSpace    = spaces[spaces count - idx - 1]
         if currentSpace ~= destSpace {
             CGSHideSpaces(_CGSDefaultConnection(), [currentSpace])
             CGSShowSpaces(_CGSDefaultConnection(), [destSpace])
             CGSManagedDisplaySetCurrentSpace(_CGSDefaultConnection(), KCGSPackagesMainDisplayIdentifier, destSpace)
+            self markSpaceForReflowing: destSpace
+            self markAllScreensForReflowing
+            (self managedWindowsForScreen: NSScreen mainScreen spaces: [destSpace]) first raise
         }
     }
     \ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
@@ -101,6 +106,7 @@ import "Layouts"
         ^nil unless window isKindOfClass: AccessibilityWindow
 
         self markScreenForReflowing: window screen
+        self markSpacesForReflowing: window spaceIds
         ^nil unless window isResizable
 
         if isActive && window[@AXMinimized] ~= 1 {
@@ -121,21 +127,29 @@ import "Layouts"
         ^valid
     }
 
-    - managedWindowsForScreen: screen
+    - managedWindowsForScreen: screen spaces: spaceIds
     {
-        ^#activeWindows select: `w| (w level == 0) && (w screen == screen) && (w spaceId == self currentSpaceId)`
+        ^#activeWindows select: { window |
+            ^no unless (window level == 0) && (window screen == screen)
+            windowSpaces = window spaceIds
+            spaceIds each: { id |
+                ^^yes if windowSpaces containsObject: id
+            }
+            ^no
+        }
     }
-    - managedWindows `self managedWindowsForScreen: nil`
 
     - activateWindow: window
     {
         self markScreenForReflowing: window screen
+        self markSpacesForReflowing: window spaceIds
         #activeWindows   += [window]
         #inactiveWindows -= [window]
     }
     - deactivateWindow: window
     {
         self markScreenForReflowing: window screen
+        self markSpacesForReflowing: window spaceIds
         #activeWindows   -= [window]
         #inactiveWindows += [window]
     }
@@ -144,6 +158,7 @@ import "Layouts"
         \ We need to get the original reference in order to access the cached screen
         window = #activeWindows find: `w| w == window`
         self markScreenForReflowing: window screen
+        self markSpacesForReflowing: window spaceIds
         #activeWindows   -= [window]
         #inactiveWindows -= [window]
     }
@@ -153,6 +168,7 @@ import "Layouts"
         activated = #inactiveWindows select: `win| (win pid) == pid`
         activated each: { window |
             self markScreenForReflowing: window screen
+            self markSpacesForReflowing: window spaceIds
             #inactiveWindows removeObject: window
             #activeWindows push: window
         }
@@ -162,6 +178,7 @@ import "Layouts"
         deactivated = #activeWindows select: `win| (win pid) == pid`
         deactivated each: { window |
             self markScreenForReflowing: window screen
+            self markSpacesForReflowing: window spaceIds
             #activeWindows removeObject: window
             #inactiveWindows push: window
         }
@@ -169,22 +186,37 @@ import "Layouts"
     - removeApplicationWithPID: pid
     {
         windowsToRemove = #activeWindows select: `win| (win pid) == pid`
-        windowsToRemove each: `w| self markScreenForReflowing: w screen`
+        windowsToRemove each: { window |
+            self markScreenForReflowing: window screen
+            self markSpacesForReflowing: window spaceIds
+        }
         #activeWindows -= windowsToRemove
         #applications  = #applications  select: `app| (app pid) ~= pid`
     }
 
     - currentLayoutForScreen: screen `#layouts[#currLayouts[screen]]`
+    - markAllScreensForReflowing `NSScreen screens each: { s | self markScreenForReflowing: s }`
     - markScreenForReflowing: screen
     {
         #screensThatNeedReflowing push: screen unless #screensThatNeedReflowing contains: screen
     }
+    - markSpaceForReflowing: spaceId
+    {
+        #spacesThatNeedReflowing push: spaceId unless #spacesThatNeedReflowing contains: spaceId
+    }
+    - markSpacesForReflowing: spaceIds
+    {
+        spaceIds each: `spaceId| self markSpaceForReflowing: spaceId `
+    }
     - reflow
     {
+        currSpace = self currentSpaceId
+        ^nil unless #spacesThatNeedReflowing containsObject: currSpace
         #screensThatNeedReflowing each: { screen |
-            self currentLayoutForScreen:screen; reflow: self screen: screen
+            self currentLayoutForScreen:screen; reflow: self screen:screen spaces:[currSpace]
         }
         #screensThatNeedReflowing = []
+        #spacesThatNeedReflowing -= [currSpace]
         ^nil
     }
 
@@ -194,6 +226,7 @@ import "Layouts"
         #currLayouts[screen] = 0 if ++#currLayouts[screen] >= #layouts count
         self currentLayoutForScreen: screen; prepare: self
         self markScreenForReflowing: screen
+        self markSpaceForReflowing: self currentSpaceId
     }
 
     - windowBefore: win `self currentLayoutForScreen: win screen; windowBefore: win inWm: self`
@@ -210,7 +243,9 @@ import "Layouts"
             idxB = #activeWindows indexOf: b
             #activeWindows[idxA], #activeWindows[idxB] = #activeWindows[idxB], #activeWindows[idxA]
             self markScreenForReflowing: a screen
+            self markSpacesForReflowing: a spaceIds
             self markScreenForReflowing: b screen
+            self markSpacesForReflowing: b spaceIds
         }
     }
     - swapWithPreviousWindow: window
@@ -226,7 +261,7 @@ import "Layouts"
     {
         \ Get the existing reference managing the same physical window
         screen = window screen
-        windows = self managedWindowsForScreen: screen
+        windows = self managedWindowsForScreen: screen spaces: window spaceIds
         idx = windows indexOf: window
         masterCount = self maxMastersOnScreen: screen
         isOnLeft = idx < masterCount
@@ -244,7 +279,7 @@ import "Layouts"
 
     - focusOnScreen: screen
     {
-        (self managedWindowsForScreen: screen) first raise
+        (self managedWindowsForScreen: screen spaces: [self currentSpaceId]) first raise
     }
     - moveWindow: window toScreen: destScreen
     {
@@ -258,7 +293,7 @@ import "Layouts"
         #activeWindows insert: window at: 0
 
         screenFrame = destScreen flippedFrame
-        windowsOnDestScreen = self managedWindowsForScreen: destScreen
+        windowsOnDestScreen = self managedWindowsForScreen: destScreen spaces: [self currentSpaceId]
         if windowsOnDestScreen count > 0 {
             currentlyFocused = windowsOnDestScreen[0]
             window setFrame: currentlyFocused frame
