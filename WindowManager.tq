@@ -304,14 +304,16 @@ import "Layouts"
         srcScreen = window screen
         ^nil if srcScreen == destScreen
 
+        currSpace = self currentSpaceId
         self markScreenForReflowing: srcScreen
         self markScreenForReflowing: destScreen
+        self markSpaceForReflowing: currSpace
 
         #activeWindows removeObject: window
         #activeWindows insert: window at: 0
 
         screenFrame = destScreen flippedFrame
-        windowsOnDestScreen = self managedWindowsForScreen: destScreen spaces: [self currentSpaceId]
+        windowsOnDestScreen = self managedWindowsForScreen: destScreen spaces: [currSpace]
         if windowsOnDestScreen count > 0 {
             currentlyFocused = windowsOnDestScreen[0]
             window setFrame: currentlyFocused frame
