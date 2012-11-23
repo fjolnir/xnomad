@@ -12,14 +12,14 @@ min = `a,b| (a > b) ? b ! a`
     - windowBefore: window inWm: wm
     {
         screen  = window screen
-        windows = wm managedWindowsForScreen: screen spaces: [wm currentSpaceId]
+        windows = wm managedWindowsForScreen: screen space: wm currentSpaceId
         idx     = windows indexOf: window
         ^idx == 0 ? windows last ! windows[idx-1]
     }
     - windowAfter: window inWm: wm
     {
         screen  = window screen
-        windows = wm managedWindowsForScreen: screen spaces: [wm currentSpaceId]
+        windows = wm managedWindowsForScreen: screen space: wm currentSpaceId
         count   = windows count
         idx     = windows indexOf: window
         ^idx == count-1 ? windows[0] ! windows[idx+1]
@@ -29,11 +29,11 @@ min = `a,b| (a > b) ? b ! a`
 }
 #TallLayout < Layout
 {
-    - reflow: wm screen: screen spaces: spaces
+    - reflow: wm screen: screen space: spaceId
     {
-        windows     = wm managedWindowsForScreen: screen spaces: spaces
+        windows     = wm managedWindowsForScreen: screen space: spaceId
         screenFrame = screen flippedFrame
-        masterCount = wm maxMastersOnScreen: screen
+        masterCount = wm maxMastersOnScreen: screen space: spaceId
 
         left = screenFrame[0][0]
         top  = screenFrame[0][1]
@@ -41,14 +41,14 @@ min = `a,b| (a > b) ? b ! a`
         masterCount  = min(windows count, masterCount)
         subCount = (windows count) - masterCount
         split = screenFrame[1][0]
-        `split *= wm ratioForScreen: screen` unless: (windows count) <= masterCount
+        `split *= wm ratioForScreen: screen space: spaceId` unless: (windows count) <= masterCount
 
         i = 0
         windows each: { win |
             if i < masterCount {
                 h = screenFrame[1][1] / masterCount
                 y = top + h*i
-                masterCount = wm maxMastersOnScreen: screen
+                masterCount = wm maxMastersOnScreen: screen space: spaceId
                 frame = [[left, y], [split, h]]
                 win setFrame: frame
             } else {
@@ -63,11 +63,11 @@ min = `a,b| (a > b) ? b ! a`
 }
 #WideLayout < Layout
 {
-    - reflow: wm screen: screen spaces: spaces
+    - reflow: wm screen: screen space: spaceId
     {
-        windows     = wm managedWindowsForScreen: screen spaces: spaces
+        windows     = wm managedWindowsForScreen: screen space: spaceId
         screenFrame = screen flippedFrame
-        masterCount = wm maxMastersOnScreen: screen
+        masterCount = wm maxMastersOnScreen: screen space: spaceId
 
         left = screenFrame[0][0]
         top  = screenFrame[0][1]
@@ -75,14 +75,14 @@ min = `a,b| (a > b) ? b ! a`
         masterCount  = min(windows count, masterCount)
         subCount = (windows count) - masterCount
         split = screenFrame[1][1]
-        `split *= wm ratioForScreen: screen` unless: (windows count) <= masterCount
+        `split *= wm ratioForScreen: screen space: spaceId` unless: (windows count) <= masterCount
 
         i = 0
         windows each: { win |
             if i < masterCount {
                 w = screenFrame[1][0] / masterCount
                 x = left + w*i
-                masterCount = wm maxMastersOnScreen: screen
+                masterCount = wm maxMastersOnScreen: screen space: spaceId \ why is this here? TODO verify it is ok to delete
                 frame = [[x, top], [w, split]]
                 win setFrame: frame
             } else {
@@ -98,11 +98,11 @@ min = `a,b| (a > b) ? b ! a`
 
 #FullscreenLayout < Layout
 {
-    - reflow: wm screen: screen spaces: spaces
+    - reflow: wm screen: screen space: spaceId
     {
-        windows     = wm managedWindowsForScreen: screen spaces: spaces
+        windows     = wm managedWindowsForScreen: screen space: spaceId
         screenFrame = screen flippedFrame
-        masterCount = wm maxMastersOnScreen: screen
+        masterCount = wm maxMastersOnScreen: screen space: spaceId
 
         windows each: `window| window setFrame: screenFrame`
     }

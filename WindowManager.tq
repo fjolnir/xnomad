@@ -76,7 +76,7 @@ import "Layouts"
             CGSManagedDisplaySetCurrentSpace(_CGSDefaultConnection(), KCGSPackagesMainDisplayIdentifier, destSpace)
             self markSpaceForReflowing: destSpace
             self markAllScreensForReflowing
-            (self managedWindowsForScreen: NSScreen mainScreen spaces: [destSpace]) first raise
+            (self managedWindowsForScreen: NSScreen mainScreen spaces: destSpace) first raise
         }
     }
     \ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
@@ -139,14 +139,11 @@ import "Layouts"
         ^valid
     }
 
-    - managedWindowsForScreen: screen spaces: spaceIds
+    - managedWindowsForScreen: screen space: spaceId
     {
         ^#activeWindows select: { window |
             ^no unless (window level == 0) && (window screen == screen)
-            windowSpaces = window spaceIds
-            spaceIds each: { id |
-                ^^yes if windowSpaces containsObject: id
-            }
+            ^yes if window spaceIds containsObject: spaceId
             ^no
         }
     }
@@ -224,7 +221,7 @@ import "Layouts"
         currSpace = self currentSpaceId
         ^nil unless #spacesThatNeedReflowing containsObject: currSpace
         #screensThatNeedReflowing each: { screen |
-            self currentLayoutForScreen:screen space:currSpace; reflow: self screen:screen spaces:[currSpace]
+            self currentLayoutForScreen:screen space:currSpace; reflow: self screen: screen space: currSpace
         }
         #screensThatNeedReflowing = []
         #spacesThatNeedReflowing -= [currSpace]
@@ -280,9 +277,10 @@ import "Layouts"
     {
         \ Get the existing reference managing the same physical window
         screen = window screen
-        windows = self managedWindowsForScreen: screen spaces: window spaceIds
+        space  = self currentSpaceId
+        windows = self managedWindowsForScreen: screen space: space
         idx = windows indexOf: window
-        masterCount = self maxMastersOnScreen: screen
+        masterCount = self maxMastersOnScreen: screen space: space
         isOnLeft = idx < masterCount
 
         winCount = windows count
@@ -298,7 +296,7 @@ import "Layouts"
 
     - focusOnScreen: screen
     {
-        (self managedWindowsForScreen: screen spaces: [self currentSpaceId]) first raise
+        (self managedWindowsForScreen: screen space: self currentSpaceId) first raise
     }
     - moveWindow: window toScreen: destScreen
     {
@@ -314,7 +312,7 @@ import "Layouts"
         #activeWindows insert: window at: 0
 
         screenFrame = destScreen flippedFrame
-        windowsOnDestScreen = self managedWindowsForScreen: destScreen spaces: [currSpace]
+        windowsOnDestScreen = self managedWindowsForScreen: destScreen space: currSpace
         if windowsOnDestScreen count > 0 {
             currentlyFocused = windowsOnDestScreen[0]
             window setFrame: currentlyFocused frame
@@ -322,21 +320,23 @@ import "Layouts"
             window setFrame: screenFrame
     }
 
-    - ratioForScreen: screen `#ratios[screen] || #defaultRatio`
-    - setRatio: ratio forScreen: screen
+    - ratioForScreen: screen space: spaceId `#ratios[screen][spaceId] || #defaultRatio`
+    - setRatio: ratio forScreen: screen space: spaceId
     {
         if (ratio > 0) && (ratio < 1) {
-            #ratios[screen] = ratio
+            #ratios[screen] ||= {}
+            #ratios[screen][spaceId] = ratio
             self markScreenForReflowing: screen
             self markSpaceForReflowing: self currentSpaceId
         }
     }
 
-    - maxMastersOnScreen: screen `#maxMasters[screen] || #defaultMaxMasters`
-    - setMaxMasters: max onScreen: screen
+    - maxMastersOnScreen: screen space: spaceId `#maxMasters[screen][spaceId] || #defaultMaxMasters`
+    - setMaxMasters: max onScreen: screen space: spaceId
     {
         if max > 0 {
-            #maxMasters[screen] = max
+            #maxMasters[screen] ||= {}
+            #maxMasters[screen][spaceId] = max
             self markScreenForReflowing: screen
             self markSpaceForReflowing: self currentSpaceId
         }
