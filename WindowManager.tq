@@ -22,7 +22,6 @@ import "Layouts"
         #ratios      = {}
         #screensThatNeedReflowing = []
         #spacesThatNeedReflowing  = []
-        NSScreen screens each: `screen| #currLayouts[screen] = {}`
 
         #layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
 
@@ -231,6 +230,7 @@ import "Layouts"
     - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen space: self currentSpaceId`
     - cycleLayoutsForScreen: screen space: spaceId
     {
+        #currLayouts[screen] ||= {}
         layoutsForScreen = #currLayouts[screen]
         layoutsForScreen[spaceId] ||= 0
         layoutsForScreen[spaceId] = 0 if ++layoutsForScreen[spaceId] >= #layouts count
