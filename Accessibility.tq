@@ -1,27 +1,27 @@
 import "AppKit"
 import "CGSPrivate"
 
-#AccessibilityElement {
-    accessor: @axElement
+@AccessibilityElement {
+    accessor: #axElement
 
     + withAXElement: element {
-        AXUIElementCopyAttributeValue(element, @AXRole, rolePtr = TQPointer toObject)
+        AXUIElementCopyAttributeValue(element, #AXRole, rolePtr = TQPointer toObject)
         role = rolePtr value
-        if role == @AXApplication then
+        if role == #AXApplication then
             ret = AccessibilityApplication new
-        else if role == @AXWindow then
+        else if role == #AXWindow then
             ret = AccessibilityWindow new
         else
             ret = AccessibilityElement new
-        ret#axElement = element
+        ret axElement = element
         ^ret
     }
     + systemWide   `self withAXElement: AXUIElementCreateSystemWide() autorelease`
     + withPID: pid `self withAXElement: AXUIElementCreateApplication(pid) autorelease`
 
 
-    - []: key {
-        AXUIElementCopyAttributeValue(#axElement, key, valPtr = TQPointer toObject)
+    - at: key {
+        AXUIElementCopyAttributeValue(@axElement, key, valPtr = TQPointer toObject)
         val  = valPtr value autorelease
 
         if val isKindOfClass: __NSCFType {
@@ -52,87 +52,87 @@ import "CGSPrivate"
     - setSizeAttribute: val forKey: key {
         self[key] = AXValueCreate(KAXValueCGSizeType,  TQPointer to: val withType: "{__NSSize=dd}")
     }
-    - []: key =: val {
-        ^AXUIElementSetAttributeValue(#axElement, key, val) == 0
+    - set: key to: val {
+        ^AXUIElementSetAttributeValue(@axElement, key, val) == 0
     }
     - isAttrWritable: key {
-        ^AXUIElementIsAttributeSettable(#axElement, key, res = TQPointer toChar) == 0 && res value == 1
+        ^AXUIElementIsAttributeSettable(@axElement, key, res = TQPointer toChar) == 0 && res value == 1
     }
     - pid {
-        ^#cachedPid if #cachedPid
-        AXUIElementGetPid(#axElement, pidPtr = TQPointer toInt)
-        ^#cachedPid = pidPtr value
+        ^@cachedPid if @cachedPid
+        AXUIElementGetPid(@axElement, pidPtr = TQPointer toInt)
+        ^@cachedPid = pidPtr value
     }
-    - isEqual: other `(self pid == other pid) && CFEqual(#axElement, other#axElement)`
+    - isEqual: other `(self pid == other pid) && CFEqual(@axElement, other axElement)`
 }
 
-#AccessibilityApplication < AccessibilityElement {
-    accessor: @notificationCallbacks initialValue: []
+@AccessibilityApplication < AccessibilityElement {
+    accessor: #notificationCallbacks initialValue: []
 
     - observe: notification on: element with: lambda {
-        unless #observer {
+        unless @observer {
             AXObserverCreate(self pid, { observer, element, notification, callbackPtr |
                 callback = callbackPtr addressAsObject
                 callback call: (AccessibilityElement withAXElement: element)
                 ^nil
             }, obsPtr = TQPointer toObject)
-            #observer = obsPtr value autorelease
-            CFRunLoopAddSource(NSRunLoop currentRunLoop getCFRunLoop, AXObserverGetRunLoopSource(#observer), KCFRunLoopDefaultMode)
+            @observer = obsPtr value autorelease
+            CFRunLoopAddSource(NSRunLoop currentRunLoop getCFRunLoop, AXObserverGetRunLoopSource(@observer), KCFRunLoopDefaultMode)
         }
         lambda = lambda copy
-        #notificationCallbacks push: lambda \ Since we are passing it to a simple void* we need to keep a reference to the callback
-        AXObserverAddNotification(#observer, element axElement, notification, lambda)
+        @notificationCallbacks push: lambda \ Since we are passing it to a simple void* we need to keep a reference to the callback
+        AXObserverAddNotification(@observer, element axElement, notification, lambda)
     }
-    - description `"<AccessibilityApplication: '«self[@AXTitle]»' «self pid»>"`
+    - description `"<AccessibilityApplication: '«self[#AXTitle]»' «self pid»>"`
 }
 
 min = `a,b| a > b ? b ! a`
-#AccessibilityWindow < AccessibilityElement {
+@AccessibilityWindow < AccessibilityElement {
     + frontMostWindow {
         system = AccessibilityElement systemWide
-        app    = system[@AXFocusedApplication]
-        win    = app[@AXFocusedWindow]
+        app    = system[#AXFocusedApplication]
+        win    = app[#AXFocusedWindow]
         ^(win isKindOfClass:AccessibilityWindow) ? win ! nil
     }
 
     - _cgWindow
     {
-        unless #cgWin {
-            err = _AXUIElementGetWindow(#axElement, ptr = TQPointer toInt)
+        unless @cgWin {
+            err = _AXUIElementGetWindow(@axElement, ptr = TQPointer toInt)
             if err ~= 0 {
                 "Couldnt get CGWindow!" print
                 ^0
             }
-            #cgWin = ptr value
+            @cgWin = ptr value
         }
-        ^#cgWin
+        ^@cgWin
     }
     - spaceIds {
         ids = CGSCopySpacesForWindows(_CGSDefaultConnection(), KCGSSpaceAll,[NSNumber numberWithInt: self _cgWindow])
         if ids == nil or ids count > 0 then
-            ^#cachedSpaceIds = ids
+            ^@cachedSpaceIds = ids
         else
-            ^#cachedSpaceIds
+            ^@cachedSpaceIds
     }
 
     - frame {
-        pos  = self[@AXPosition]
-        size = self[@AXSize]
+        pos  = self[#AXPosition]
+        size = self[#AXSize]
         ^(pos && size) ? [pos, size] ! nil
     }
     - setFrame: f     `self setFrame: f onScreen: self screen`
-    - setPosition: p  `self setPointAttribute: p forKey: @AXPosition`
-    - setSize: s      `self setSizeAttribute: s  forKey: @AXSize`
-    - isResizable     `self isAttrWritable: @AXSize`
-    - isMovable       `self isAttrWritable: @AXPosition`
+    - setPosition: p  `self setPointAttribute: p forKey: #AXPosition`
+    - setSize: s      `self setSizeAttribute: s  forKey: #AXSize`
+    - isResizable     `self isAttrWritable: #AXSize`
+    - isMovable       `self isAttrWritable: #AXPosition`
     - setFrame: f onScreen: screen {
         curr = self frame
         frame1 = [
             [ min(f[0][0], curr[0][0]), min(f[0][1], curr[0][1]) ],
             [ min(f[1][0], curr[1][0]), min(f[1][1], curr[1][1]) ]
         ]
-        self; setPosition: frame1[0];
-                  setSize: frame1[1]
+        self setPosition: frame1[0];
+                 setSize: frame1[1]
         self setPosition: f[0] unless NSEqualPoints(f[0], frame1[0])
         self     setSize: f[1] unless NSEqualSizes(f[1], frame1[1])
     }
@@ -140,7 +140,7 @@ min = `a,b| a > b ? b ! a`
     - raise {
         GetProcessForPID(self pid, psn = TQPointer toVoid)
         SetFrontProcess(psn)
-        err = AXUIElementPerformAction(#axElement, @AXRaise)
+        err = AXUIElementPerformAction(@axElement, #AXRaise)
     }
 
     - screen {
@@ -148,7 +148,7 @@ min = `a,b| a > b ? b ! a`
         winFrame   = self frame
         mainScreen = NSScreen mainScreen
         \ If the frame is unavailable we are no longer on screen
-        ^#cachedScreen || mainScreen if winFrame == nil
+        ^@cachedScreen || mainScreen if winFrame == nil
 
         mainFrame  = mainScreen frame
         maxContainedPercentage = 0
@@ -167,7 +167,7 @@ min = `a,b| a > b ? b ! a`
                 result = screen
             }
         }
-        ^#cachedScreen = result || mainScreen
+        ^@cachedScreen = result || mainScreen
     }
 
     - level {
@@ -176,11 +176,11 @@ min = `a,b| a > b ? b ! a`
     }
     - description {
         frame = self frame
-        ^"<AccessibilityWindow: '«self[@AXTitle]»' («frame[0][0]», «frame[0][1]»), («frame[1][0]», «frame[1][1]»)>"
+        ^"<AccessibilityWindow: '«self[#AXTitle]»' («frame[0][0]», «frame[0][1]»), («frame[1][0]», «frame[1][1]»)>"
     }
 }
 
-#NSScreen {
+@NSScreen {
     - flippedFrameRelativeTo: mainFrame {
         frame = self frame
         frame[0][1] = -frame[0][1] + (mainFrame[1][1] - frame[1][1])

@@ -1,12 +1,12 @@
 min = `a,b| (a > b) ? b ! a`
 
-#Layout
+@Layout
 {
     - prepare: wm
     {
-        idx = wm#activeWindows indexOf: (AccessibilityWindow frontMostWindow)
+        idx = wm activeWindows indexOf: (AccessibilityWindow frontMostWindow)
         if idx ~= -1 then
-            wm#activeWindows[idx], wm#activeWindows[0] = wm#activeWindows[0], wm#activeWindows[idx]
+            wm activeWindows swap: 0 with: idx
     }
 
     - windowBefore: window inWm: wm
@@ -27,7 +27,7 @@ min = `a,b| (a > b) ? b ! a`
 
     - focusOnWindow: window inWm: wm `window raise`
 }
-#TallLayout < Layout
+@TallLayout < Layout
 {
     - reflow: wm screen: screen space: spaceId
     {
@@ -61,7 +61,7 @@ min = `a,b| (a > b) ? b ! a`
         }
     }
 }
-#WideLayout < Layout
+@WideLayout < Layout
 {
     - reflow: wm screen: screen space: spaceId
     {
@@ -96,7 +96,7 @@ min = `a,b| (a > b) ? b ! a`
     }
 }
 
-#FullscreenLayout < Layout
+@FullscreenLayout < Layout
 {
     - reflow: wm screen: screen space: spaceId
     {

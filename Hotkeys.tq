@@ -1,32 +1,32 @@
 import "Carbon"
 
-#HotkeyManager {
+@HotkeyManager {
     accessor: eventHandlerInstalled
 
     - init {
-        #hotkeyRefs     = []
-        #hotkeyHandlers = []
-        #specialKeycodes = {
-            @leftArrow  => 123, @rightArrow => 124,
-            @downArrow  => 125, @upArrow    => 126,
-            @home       => 115, @end        => 119,
-            @pageDown   => 121, @pageUp     => 116,
-            @delete     => 117, @insert     => 114,
-            @backspace  => 51,  @return     => 36,
-            @tab        => 48,  @capsLock   => 57
+        @hotkeyRefs     = []
+        @hotkeyHandlers = []
+        @specialKeycodes = {
+            #leftArrow  => 123, #rightArrow => 124,
+            #downArrow  => 125, #upArrow    => 126,
+            #home       => 115, #end        => 119,
+            #pageDown   => 121, #pageUp     => 116,
+            #delete     => 117, #insert     => 114,
+            #backspace  => 51,  #return     => 36,
+            #tab        => 48,  #capsLock   => 57
         }
-        #modifierMasks  = {
-            @option  => 1 lshift: 11,
-            @command => 1 lshift: 8,
-            @control => 1 lshift: 12,
-            @shift   => 1 lshift: 9
+        @modifierMasks  = {
+            #option  => 1 lshift: 11,
+            #command => 1 lshift: 8,
+            #control => 1 lshift: 12,
+            #shift   => 1 lshift: 9
         }
         self installEventHandler
         ^self
     }
 
     - installEventHandler {
-        ^nil if #eventHandlerRef
+        ^nil if @eventHandlerRef
 
         eventSpec    = TQPointer withType: "{?=II}" count: 1
         eventSpec[0] = [KEventClassKeyboard, KEventHotKeyReleased]
@@ -35,27 +35,27 @@ import "Carbon"
                               TypeEventHotKeyID, nil, 8, \ sizeof(EventHotKeyID) == 8
                               nil, hotkeyIdPtr = TQPointer withType:"{__EventHotKeyID=II}")
             hotkeyId = (hotkeyIdPtr value)[1]
-            #hotkeyHandlers[hotkeyId-1] call
-        }, 1, eventSpec, nil, #eventHandlerRef = TQPointer toVoid)
+            @hotkeyHandlers[hotkeyId-1] call
+        }, 1, eventSpec, nil, @eventHandlerRef = TQPointer toVoid)
         ^err == 0
     }
 
     - registerHotkey: key withModifiers: modifiers handler: lambda {
         keycode      = self characterToKeycode: key
         modifierMask = 0
-        modifiers each: `mod| modifierMask = modifierMask bitOr: #modifierMasks[mod]`
+        modifiers each: `mod| modifierMask = modifierMask bitOr: @modifierMasks[mod]`
 
         err = RegisterEventHotKey(keycode, modifierMask,
-                                  [1414676814, #hotkeyRefs count + 1], \ 'TRAN' == 1414676814
+                                  [1414676814, @hotkeyRefs count + 1], \ 'TRAN' == 1414676814
                                   GetEventDispatcherTarget(), 0,
                                   hotkeyRef = TQPointer withType: "^v")
         ^nil if err ~= 0
 
-        #hotkeyRefs     push: hotkeyRef value
-        #hotkeyHandlers push: lambda
-        ^#hotkeyRefs count
+        @hotkeyRefs     push: hotkeyRef value
+        @hotkeyHandlers push: lambda
+        ^@hotkeyRefs count
     }
-    - unregisterHotkey: key `UnregisterEventHotKey(#hotkeyRefs[key-1]) == 0`
+    - unregisterHotkey: key `UnregisterEventHotKey(@hotkeyRefs[key-1]) == 0`
 
     - stringForKeycode: keyCode {
         keyboard   = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()
@@ -75,21 +75,21 @@ import "Carbon"
         ^err == 0 ? (NSString stringWithCharacters:chars length: 1) ! nil
     }
     - characterToKeycode: char {
-        if #specialKeycodes[char] then
-            ^#specialKeycodes[char]
-        else if #charcodeTranslationTable == nil {
-            #charcodeTranslationTable = {}
-            0 to: 127; each: { code |
+        if @specialKeycodes[char] then
+            ^@specialKeycodes[char]
+        else if @charcodeTranslationTable == nil {
+            @charcodeTranslationTable = {}
+            (0 to: 127) each: { code |
                 str = self stringForKeycode: code
-                #charcodeTranslationTable[str] ||= code
+                @charcodeTranslationTable[str] ||= code
             }
         }
-        ^#charcodeTranslationTable[char]
+        ^@charcodeTranslationTable[char]
     }
 
     - dealloc {
-        #hotkeyRefs each: `key| self unregisterHotkey: key`
-        RemoveEventHandler(#eventHandlerRef) unless #eventHandlerRef == nil
+        @hotkeyRefs each: `key| self unregisterHotkey: key`
+        RemoveEventHandler(@eventHandlerRef) unless @eventHandlerRef == nil
     }
 }
 

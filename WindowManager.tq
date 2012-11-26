@@ -1,57 +1,57 @@
 import "Accessibility"
 import "Layouts"
 
-#NSNotificationCenter
+@NSNotificationCenter
 {
     - observe: name with: lambda `self addObserverForName: name object: nil queue: nil usingBlock:lambda`
 }
 
-#WindowManager
+@WindowManager
 {
-    accessor: @applications       initialValue: []
-    accessor: @activeWindows      initialValue: []
-    accessor: @inactiveWindows    initialValue: []
-    accessor: @windowsInMaster    initialValue: 1
-    accessor: @defaultRatio       initialValue: 0.7
-    accessor: @defaultMaxMasters  initialValue: 1
+    accessor: #applications       initialValue: []
+    accessor: #activeWindows      initialValue: []
+    accessor: #inactiveWindows    initialValue: []
+    accessor: #windowsInMaster    initialValue: 1
+    accessor: #defaultRatio       initialValue: 0.7
+    accessor: #defaultMaxMasters  initialValue: 1
 
     - init
     {
-        #currLayouts = {}
-        #maxMasters  = {}
-        #ratios      = {}
-        #screensThatNeedReflowing = []
-        #spacesThatNeedReflowing  = []
+        @currLayouts = {}
+        @maxMasters  = {}
+        @ratios      = {}
+        @screensThatNeedReflowing = []
+        @spacesThatNeedReflowing  = []
 
-        #layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
+        @layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { app |
-             self addApplicationWithPID: app#processIdentifier unless app#bundleIdentifier hasPrefix: "com.apple.dashboard"
+             self addApplicationWithPID: app processIdentifier unless app bundleIdentifier hasPrefix: "com.apple.dashboard"
         }
 
-        workspace notificationCenter;
+        workspace notificationCenter
                 observe: NSWorkspaceDidLaunchApplicationNotification with: { n |
-                    ^nil if n#userInfo[@NSApplicationBundleIdentifier] == nil
-                    ~self; addApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
-                                          reflow
+                    ^nil if (n userInfo at:#NSApplicationBundleIdentifier) == nil
+                    ~self addApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                         reflow
                 };
                 observe: NSWorkspaceDidTerminateApplicationNotification with: { n |
-                    ~self; removeApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
-                                             reflow
+                    ~self removeApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                            reflow
                 };
                 observe: NSWorkspaceDidUnhideApplicationNotification with: { n |
-                    ~self; activateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
-                                               reflow
+                    ~self activateApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                              reflow
                 };
                 observe: NSWorkspaceDidHideApplicationNotification with: { n |
-                    ~self; deactivateApplicationWithPID: (n#userInfo[@NSWorkspaceApplicationKey] processIdentifier);
-                                                 reflow
+                    ~self deactivateApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                                reflow
                 };
                 observe: NSWorkspaceActiveSpaceDidChangeNotification with: { n |
-                    ~self; markAllScreensForReflowing;
-                                markSpaceForReflowing: self currentSpaceId;
-                                               reflow
+                    ~self markAllScreensForReflowing;
+                               markSpaceForReflowing: self currentSpaceId;
+                                              reflow
                 }
         ^self
     }
@@ -93,21 +93,21 @@ import "Layouts"
 
     - applicationWithPID: pid
     {
-        ^#applications find: `app| (app pid) == pid`
+        ^@applications find: `app| (app pid) == pid`
     }
     - addApplicationWithPID: pid
     {
         ^nil if self applicationWithPID: pid
         app = AccessibilityElement withPID: pid
         ^nil unless app isKindOfClass: AccessibilityApplication
-        #applications push: app
+        @applications push: app
 
-        app[@AXWindows] each: { window |
-            self addWindow: window active: (app[@AXHidden] == 0)
+        app[#AXWindows] each: { window |
+            self addWindow: window active: (app[#AXHidden] == 0)
         }
         \ Watch for new window notifications
-        app observe: @AXWindowCreated on: app with: { newWindow |
-            ~self; addWindow: newWindow; reflow
+        app observe: #AXWindowCreated on: app with: { newWindow |
+            ~self addWindow: newWindow; reflow
         }
     }
 
@@ -120,27 +120,27 @@ import "Layouts"
         self markSpacesForReflowing: window spaceIds
         ^nil unless window isResizable
 
-        if isActive && window[@AXMinimized] ~= 1 {
-            #activeWindows insert: window at: 0
+        if isActive && window[#AXMinimized] ~= 1 {
+            @activeWindows insert: window at: 0
         } else
-            #inactiveWindows push: window
+            @inactiveWindows push: window
 
         app = self applicationWithPID: window pid
-        app observe: @AXUIElementDestroyed on: window with: { w |
-            ~self; removeWindow: window; reflow
+        app observe: #AXUIElementDestroyed on: window with: { w |
+            ~self removeWindow: window; reflow
         }
-        app observe: @AXWindowMiniaturized on: window with: { w |
-            ~self; deactivateWindow: window; reflow
+        app observe: #AXWindowMiniaturized on: window with: { w |
+            ~self deactivateWindow: window; reflow
         }
-        app observe: @AXWindowDeminiaturized on: window with: { w |
-            ~self; activateWindow: window; reflow
+        app observe: #AXWindowDeminiaturized on: window with: { w |
+            ~self activateWindow: window; reflow
         }
         ^valid
     }
 
     - managedWindowsForScreen: screen space: spaceId
     {
-        ^#activeWindows select: { window |
+        ^@activeWindows select: { window |
             ^no unless (window level == 0) && (window screen == screen)
             ^yes if window spaceIds containsObject: spaceId
             ^no
@@ -151,65 +151,65 @@ import "Layouts"
     {
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        #activeWindows   += [window]
-        #inactiveWindows -= [window]
+        @activeWindows   += [window]
+        @inactiveWindows -= [window]
     }
     - deactivateWindow: window
     {
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        #activeWindows   -= [window]
-        #inactiveWindows += [window]
+        @activeWindows   -= [window]
+        @inactiveWindows += [window]
     }
     - removeWindow: window
     {
         \ We need to get the original reference in order to access the cached screen
-        window = #activeWindows find: `w| w == window`
+        window = @activeWindows find: `w| w == window`
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        #activeWindows   -= [window]
-        #inactiveWindows -= [window]
+        @activeWindows   -= [window]
+        @inactiveWindows -= [window]
     }
 
     - activateApplicationWithPID: pid
     {
-        activated = #inactiveWindows select: `win| (win pid) == pid`
+        activated = @inactiveWindows select: `win| (win pid) == pid`
         activated each: { window |
             self markScreenForReflowing: window screen
             self markSpacesForReflowing: window spaceIds
-            #inactiveWindows removeObject: window
-            #activeWindows push: window
+            @inactiveWindows removeObject: window
+            @activeWindows push: window
         }
     }
     - deactivateApplicationWithPID: pid
     {
-        deactivated = #activeWindows select: `win| (win pid) == pid`
+        deactivated = @activeWindows select: `win| (win pid) == pid`
         deactivated each: { window |
             self markScreenForReflowing: window screen
             self markSpacesForReflowing: window spaceIds
-            #activeWindows removeObject: window
-            #inactiveWindows push: window
+            @activeWindows removeObject: window
+            @inactiveWindows push: window
         }
     }
     - removeApplicationWithPID: pid
     {
-        windowsToRemove = #activeWindows select: `win| (win pid) == pid`
+        windowsToRemove = @activeWindows select: `win| (win pid) == pid`
         windowsToRemove each: { window |
             self markScreenForReflowing: window screen
             self markSpacesForReflowing: window spaceIds
         }
-        #activeWindows -= windowsToRemove
-        #applications  = #applications  select: `app| (app pid) ~= pid`
+        @activeWindows -= windowsToRemove
+        @applications = @applications select: `app| (app pid) ~= pid`
     }
 
     - markAllScreensForReflowing `NSScreen screens each: { s | self markScreenForReflowing: s }`
     - markScreenForReflowing: screen
     {
-        #screensThatNeedReflowing push: screen unless #screensThatNeedReflowing contains: screen
+        @screensThatNeedReflowing push: screen unless @screensThatNeedReflowing contains: screen
     }
     - markSpaceForReflowing: spaceId
     {
-        #spacesThatNeedReflowing push: spaceId unless #spacesThatNeedReflowing contains: spaceId
+        @spacesThatNeedReflowing push: spaceId unless @spacesThatNeedReflowing contains: spaceId
     }
     - markSpacesForReflowing: spaceIds
     {
@@ -218,36 +218,36 @@ import "Layouts"
     - reflow
     {
         currSpace = self currentSpaceId
-        ^nil unless #spacesThatNeedReflowing containsObject: currSpace
-        #screensThatNeedReflowing each: { screen |
-            self currentLayoutForScreen:screen space:currSpace; reflow: self screen: screen space: currSpace
+        ^nil unless @spacesThatNeedReflowing containsObject: currSpace
+        @screensThatNeedReflowing each: { screen |
+            (self currentLayoutForScreen:screen space:currSpace) reflow: self screen: screen space: currSpace
         }
-        #screensThatNeedReflowing = []
-        #spacesThatNeedReflowing -= [currSpace]
+        @screensThatNeedReflowing = []
+        @spacesThatNeedReflowing -= [currSpace]
         ^nil
     }
 
     - cycleLayouts `self cycleLayoutsForScreen: AccessibilityWindow frontMostWindow screen space: self currentSpaceId`
     - cycleLayoutsForScreen: screen space: spaceId
     {
-        #currLayouts[screen] ||= {}
-        layoutsForScreen = #currLayouts[screen]
+        @currLayouts[screen] ||= {}
+        layoutsForScreen = @currLayouts[screen]
         layoutsForScreen[spaceId] ||= 0
-        layoutsForScreen[spaceId] = 0 if ++layoutsForScreen[spaceId] >= #layouts count
-        self currentLayoutForScreen:screen space:spaceId; prepare:self
+        layoutsForScreen[spaceId] = 0 if ++layoutsForScreen[spaceId] >= @layouts count
+        (self currentLayoutForScreen:screen space:spaceId) prepare:self
         self markScreenForReflowing:screen
         self markSpaceForReflowing:spaceId
     }
     - currentLayoutForScreen: screen space: spaceId
     {
-        layoutsForScreen = #currLayouts[screen]
+        layoutsForScreen = @currLayouts[screen]
         layoutsForScreen[spaceId] ||= 0
-        ^#layouts[layoutsForScreen[spaceId]]
+        ^@layouts[layoutsForScreen[spaceId]]
     }
 
-    - windowBefore:   win `self currentLayoutForScreen: win screen space:self currentSpaceId;  windowBefore: win inWm: self`
-    - windowAfter:    win `self currentLayoutForScreen: win screen space:self currentSpaceId;   windowAfter: win inWm: self`
-    - focusOnWindow:  win `self currentLayoutForScreen: win screen space:self currentSpaceId; focusOnWindow: win inWm: self`
+    - windowBefore:   win `(self currentLayoutForScreen: win screen space:self currentSpaceId)  windowBefore: win inWm: self`
+    - windowAfter:    win `(self currentLayoutForScreen: win screen space:self currentSpaceId)   windowAfter: win inWm: self`
+    - focusOnWindow:  win `(self currentLayoutForScreen: win screen space:self currentSpaceId) focusOnWindow: win inWm: self`
 
     - selectPreviousWindow: window `self focusOnWindow: (self windowBefore: window)`
     - selectNextWindow: window     `self focusOnWindow: (self windowAfter: window)`
@@ -255,9 +255,9 @@ import "Layouts"
     - swapWindow: a with: b
     {
         if a ~= b {
-            idxA = #activeWindows indexOf: a
-            idxB = #activeWindows indexOf: b
-            #activeWindows[idxA], #activeWindows[idxB] = #activeWindows[idxB], #activeWindows[idxA]
+            idxA = @activeWindows indexOf: a
+            idxB = @activeWindows indexOf: b
+            @activeWindows[idxA], @activeWindows[idxB] = @activeWindows[idxB], @activeWindows[idxA]
             self markScreenForReflowing: a screen
             self markSpacesForReflowing: a spaceIds
             self markScreenForReflowing: b screen
@@ -308,8 +308,8 @@ import "Layouts"
         self markScreenForReflowing: destScreen
         self markSpaceForReflowing: currSpace
 
-        #activeWindows removeObject: window
-        #activeWindows insert: window at: 0
+        @activeWindows removeObject: window
+        @activeWindows insert: window at: 0
 
         screenFrame = destScreen flippedFrame
         windowsOnDestScreen = self managedWindowsForScreen: destScreen space: currSpace
@@ -320,23 +320,23 @@ import "Layouts"
             window setFrame: screenFrame
     }
 
-    - ratioForScreen: screen space: spaceId `#ratios[screen][spaceId] || #defaultRatio`
+    - ratioForScreen: screen space: spaceId `@ratios[screen][spaceId] || @defaultRatio`
     - setRatio: ratio forScreen: screen space: spaceId
     {
         if (ratio > 0) && (ratio < 1) {
-            #ratios[screen] ||= {}
-            #ratios[screen][spaceId] = ratio
+            @ratios[screen] ||= {}
+            @ratios[screen][spaceId] = ratio
             self markScreenForReflowing: screen
             self markSpaceForReflowing: self currentSpaceId
         }
     }
 
-    - maxMastersOnScreen: screen space: spaceId `#maxMasters[screen][spaceId] || #defaultMaxMasters`
+    - maxMastersOnScreen: screen space: spaceId `@maxMasters[screen][spaceId] || @defaultMaxMasters`
     - setMaxMasters: max onScreen: screen space: spaceId
     {
         if max > 0 {
-            #maxMasters[screen] ||= {}
-            #maxMasters[screen][spaceId] = max
+            @maxMasters[screen] ||= {}
+            @maxMasters[screen][spaceId] = max
             self markScreenForReflowing: screen
             self markSpaceForReflowing: self currentSpaceId
         }
