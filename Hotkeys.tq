@@ -1,7 +1,7 @@
 import "Carbon"
 
 @HotkeyManager {
-    accessor: eventHandlerInstalled
+    accessor: #eventHandlerInstalled
 
     - init {
         @hotkeyRefs     = []

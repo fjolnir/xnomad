@@ -63,7 +63,7 @@ import "CGSPrivate"
         AXUIElementGetPid(@axElement, pidPtr = TQPointer toInt)
         ^@cachedPid = pidPtr value
     }
-    - isEqual: other `(self pid == other pid) && CFEqual(@axElement, other axElement)`
+    - isEqualTo: other `(self pid == other pid) && CFEqual(@axElement, other axElement)`
 }
 
 @AccessibilityApplication < AccessibilityElement {
