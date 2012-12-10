@@ -28,7 +28,9 @@ if key = hotkeys[#SelectNext] {
 if key = hotkeys[#Swap] {
     mgr registerHotkey: key[#key] withModifiers: key[#modifiers] handler: {
         win = AccessibilityWindow frontMostWindow
-        wm swapWithCounterpart: win
+        other = wm swapWithCounterpart: win
+        other raise if (other frame)[0][0] > 10 \ If the other window was made primary
+                                                \ then it makes sense to give it focus
         wm reflow
     }
 }

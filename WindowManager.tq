@@ -262,6 +262,7 @@ import "Layouts"
             self markSpacesForReflowing: a spaceIds
             self markScreenForReflowing: b screen
             self markSpacesForReflowing: b spaceIds
+            ^b
         }
     }
     - swapWithPreviousWindow: window
