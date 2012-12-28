@@ -56,7 +56,7 @@ import "Layouts"
         ^self
     }
 
-    - currentSpaceId `CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceCurrent)[0]`
+    - currentSpaceId `CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceCurrent) at: 0`
     - currentSpace
     {
         spaces = CGSCopySpaces(_CGSDefaultConnection(), KCGSSpaceAll)
@@ -78,18 +78,18 @@ import "Layouts"
             (self managedWindowsForScreen: NSScreen mainScreen spaces: destSpace) first raise
         }
     }
-    \ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
-    - moveWindow: window toSpace: destSpaceIdx
-    {
-        conn   = _CGSDefaultConnection()
-        spaces = CGSCopySpaces(conn, KCGSSpaceAll)
-        srcSpace  = window spaceId
-        destSpace = spaces[destSpaceIdx]
-
-        ^nil if srcSpace == destSpace
-        CGSRemoveWindowsFromSpaces(conn, [window _cgWindow], [srcSpace])
-        CGSAddWindowsToSpaces(conn, [window _cgWindow], [destSpace])
-    }
+\ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
+\    - moveWindow: window toSpace: destSpaceIdx
+\    {
+\        conn   = _CGSDefaultConnection()
+\        spaces = CGSCopySpaces(conn, KCGSSpaceAll)
+\        srcSpace  = window spaceId
+\        destSpace = spaces[destSpaceIdx]
+\
+\        ^nil if srcSpace == destSpace
+\        CGSRemoveWindowsFromSpaces(conn, [window _cgWindow], [srcSpace])
+\        CGSAddWindowsToSpaces(conn, [window _cgWindow], [destSpace])
+\    }
 
     - applicationWithPID: pid
     {
@@ -120,9 +120,9 @@ import "Layouts"
         self markSpacesForReflowing: window spaceIds
         ^nil unless window isResizable
 
-        if isActive && window[#AXMinimized] ~= 1 {
+        if isActive && window[#AXMinimized] ~= 1 then
             @activeWindows insert: window at: 0
-        } else
+        else
             @inactiveWindows push: window
 
         app = self applicationWithPID: window pid
@@ -141,7 +141,7 @@ import "Layouts"
     - managedWindowsForScreen: screen space: spaceId
     {
         ^@activeWindows select: { window |
-            ^no unless (window level == 0) && (window screen == screen)
+            ^no  unless (window level == 0) && (window screen == screen)
             ^yes if window spaceIds containsObject: spaceId
             ^no
         }
@@ -151,15 +151,15 @@ import "Layouts"
     {
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        @activeWindows   += [window]
-        @inactiveWindows -= [window]
+        @activeWindows push: window
+        @inactiveWindows remove: window
     }
     - deactivateWindow: window
     {
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        @activeWindows   -= [window]
-        @inactiveWindows += [window]
+        @activeWindows remove: window
+        @inactiveWindows push: window
     }
     - removeWindow: window
     {
@@ -167,8 +167,8 @@ import "Layouts"
         window = @activeWindows find: `w| w == window`
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        @activeWindows   -= [window]
-        @inactiveWindows -= [window]
+        @activeWindows   remove: window
+        @inactiveWindows remove: window
     }
 
     - activateApplicationWithPID: pid
@@ -177,7 +177,7 @@ import "Layouts"
         activated each: { window |
             self markScreenForReflowing: window screen
             self markSpacesForReflowing: window spaceIds
-            @inactiveWindows removeObject: window
+            @inactiveWindows remove: window
             @activeWindows push: window
         }
     }
@@ -187,7 +187,7 @@ import "Layouts"
         deactivated each: { window |
             self markScreenForReflowing: window screen
             self markSpacesForReflowing: window spaceIds
-            @activeWindows removeObject: window
+            @activeWindows remove: window
             @inactiveWindows push: window
         }
     }
@@ -223,7 +223,7 @@ import "Layouts"
             (self currentLayoutForScreen:screen space:currSpace) reflow: self screen: screen space: currSpace
         }
         @screensThatNeedReflowing = []
-        @spacesThatNeedReflowing -= [currSpace]
+        @spacesThatNeedReflowing remove: currSpace
         ^nil
     }
 
@@ -309,7 +309,7 @@ import "Layouts"
         self markScreenForReflowing: destScreen
         self markSpaceForReflowing: currSpace
 
-        @activeWindows removeObject: window
+        @activeWindows remove: window
         @activeWindows insert: window at: 0
 
         screenFrame = destScreen flippedFrame

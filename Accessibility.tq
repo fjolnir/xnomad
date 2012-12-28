@@ -6,19 +6,14 @@ import "CGSPrivate"
 
     + withAXElement: element {
         AXUIElementCopyAttributeValue(element, #AXRole, rolePtr = TQPointer toObject)
-        role = rolePtr value
-        if role == #AXApplication then
-            ret = AccessibilityApplication new
-        else if role == #AXWindow then
-            ret = AccessibilityWindow new
-        else
-            ret = AccessibilityElement new
-        ret axElement = element
-        ^ret
+        klass = rolePtr value case: {
+            #AXApplication => `AccessibilityApplication`,
+            #AXWindow      => `AccessibilityWindow`
+        } else: `AccessibilityElement`
+        ^klass new setAxElement: element; self
     }
     + systemWide   `self withAXElement: AXUIElementCreateSystemWide() autorelease`
     + withPID: pid `self withAXElement: AXUIElementCreateApplication(pid) autorelease`
-
 
     - at: key {
         AXUIElementCopyAttributeValue(@axElement, key, valPtr = TQPointer toObject)
@@ -47,10 +42,10 @@ import "CGSPrivate"
         ^CFEqual(ret, KCFNull) ? nil ! ret
     }
     - setPointAttribute: val forKey: key {
-        self[key] = AXValueCreate(KAXValueCGPointType, TQPointer to: val withType: "{__NSPoint=dd}")
+        self[key] = AXValueCreate(KAXValueCGPointType, TQPointer to: val withType: "{?=dd}")
     }
     - setSizeAttribute: val forKey: key {
-        self[key] = AXValueCreate(KAXValueCGSizeType,  TQPointer to: val withType: "{__NSSize=dd}")
+        self[key] = AXValueCreate(KAXValueCGSizeType,  TQPointer to: val withType: "{?=dd}")
     }
     - set: key to: val {
         ^AXUIElementSetAttributeValue(@axElement, key, val) == 0
@@ -72,8 +67,7 @@ import "CGSPrivate"
     - observe: notification on: element with: lambda {
         unless @observer {
             AXObserverCreate(self pid, { observer, element, notification, callbackPtr |
-                callback = callbackPtr addressAsObject
-                callback call: (AccessibilityElement withAXElement: element)
+                callbackPtr addressAsObject call: (AccessibilityElement withAXElement: element)
                 ^nil
             }, obsPtr = TQPointer toObject)
             @observer = obsPtr value autorelease
@@ -108,7 +102,7 @@ min = `a,b| a > b ? b ! a`
         ^@cgWin
     }
     - spaceIds {
-        ids = CGSCopySpacesForWindows(_CGSDefaultConnection(), KCGSSpaceAll,[NSNumber numberWithInt: self _cgWindow])
+        ids = CGSCopySpacesForWindows(_CGSDefaultConnection(), KCGSSpaceAll, [NSNumber numberWithInt: self _cgWindow])
         if ids == nil or ids count > 0 then
             ^@cachedSpaceIds = ids
         else
