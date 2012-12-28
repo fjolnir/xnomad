@@ -103,8 +103,9 @@ import "Layouts"
         @applications push: app
 
         app[#AXWindows] each: { window |
-            self addWindow: window active: (app[#AXHidden] == 0)
+            self addWindow: window active: (0 == app[#AXHidden])
         }
+
         \ Watch for new window notifications
         app observe: #AXWindowCreated on: app with: { newWindow |
             ~self addWindow: newWindow; reflow
