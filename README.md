@@ -3,7 +3,7 @@ xnomad
 
 A tiling window manager for OS X; written in [tranquil](https://github.com/fjolnir/tranquil).
 
-[A screenshot of it running on my machine](http://d.asgeirsson.is/MIUS) (Along with a couple of other hacks to get rid of distractions such as the menubar & rounded corners)
+[A screenshot of it running on my machine](http://d.asgeirsson.is/MIUS) (Along with a couple of other hacks to get rid of distractions such as the menubar & [rounded corners](http://macthemes.net/forum/viewtopic.php?f=8&t=16812620&sid=5cb0846289bdac319e9d29a732faae35))
 
 ##setup
 
