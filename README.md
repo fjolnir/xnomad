@@ -19,6 +19,8 @@ OS X 10.8 or newer is required.
 
 In order to make the most of xnomad, I recommend you also install [afloat](http://infinite-labs.net/afloat/). It will add shortcuts for making windows floating (and therefore ignored by xnomad) and resizing/moving windows without having to spend precious milliseconds looking for the window edges.
 
+The rounded corner hack is discussed under this issue: https://github.com/fjolnir/xnomad/issues/6
+
 ##building
 
 In order to build xnomad you'll first need to install [tranquil](https://github.com/fjolnir/tranquil). Then you can simply write (assuming you added /usr/local/tranquil/bin to your PATH) `tqc Main.tq -framework Carbon -framework ApplicationServices -o xnomad` and a binary will appear.
