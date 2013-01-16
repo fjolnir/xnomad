@@ -3,7 +3,7 @@ xnomad
 
 A tiling window manager for OS X; written in [tranquil](https://github.com/fjolnir/tranquil).
 
-[A screenshot of it running on my machine](http://d.asgeirsson.is/MIUS) (Along with a couple of other hacks to get rid of distractions such as the menubar & rounded corners)
+[A screenshot of it running on my machine](http://d.asgeirsson.is/E9jb) (Along with a couple of other hacks to get rid of distractions such as the menubar & rounded corners)
 
 ##setup
 
@@ -18,6 +18,8 @@ OS X 10.8 or newer is required.
 ## protip
 
 In order to make the most of xnomad, I recommend you also install [afloat](http://infinite-labs.net/afloat/). It will add shortcuts for making windows floating (and therefore ignored by xnomad) and resizing/moving windows without having to spend precious milliseconds looking for the window edges.
+
+The rounded corner hack is discussed under this issue: https://github.com/fjolnir/xnomad/issues/6
 
 ##building
 
