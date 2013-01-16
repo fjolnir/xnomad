@@ -23,7 +23,7 @@ import "Layouts"
         @screensThatNeedReflowing = []
         @spacesThatNeedReflowing  = []
 
-        @layouts = [TallLayout new, WideLayout new, FullscreenLayout new]
+        @layouts = [MultiColLayout new, TallLayout new, WideLayout new, FullscreenLayout new]
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { app |

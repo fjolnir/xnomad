@@ -93,10 +93,7 @@ min = `a,b| a > b ? b ! a`
     {
         unless @cgWin {
             err = _AXUIElementGetWindow(@axElement, ptr = TQPointer toInt)
-            if err ~= 0 {
-                "Couldnt get CGWindow!" print
-                ^0
-            }
+            ^0 if err ~= 0
             @cgWin = ptr value
         }
         ^@cgWin

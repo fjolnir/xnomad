@@ -41,7 +41,10 @@ min = `a,b| (a > b) ? b ! a`
         masterCount  = min(windows count, masterCount)
         subCount = (windows count) - masterCount
         split = screenFrame[1][0]
-        `split *= wm ratioForScreen: screen space: spaceId` unless: (windows count) <= masterCount
+        if windows count > masterCount {
+            split *= wm ratioForScreen: screen space: spaceId
+            subWidth = (screenFrame[1][0] - split) / subCount
+        }
 
         i = 0
         windows each: { win |
@@ -61,6 +64,47 @@ min = `a,b| (a > b) ? b ! a`
         }
     }
 }
+
+@MultiColLayout < Layout
+{
+    - reflow: wm screen: screen space: spaceId
+    {
+        windows     = wm managedWindowsForScreen: screen space: spaceId
+        screenFrame = screen flippedFrame
+        masterCount = wm maxMastersOnScreen: screen space: spaceId
+
+        left = screenFrame[0][0]
+        top  = screenFrame[0][1]
+
+        masterCount = min(windows count, masterCount)
+        subCount = windows count - masterCount
+
+        if subCount > 0 {
+            subX = screenFrame[1][0] * (wm ratioForScreen: screen space: spaceId)
+            subWidth    = (screenFrame[1][0] - subX)
+        } else
+            subWidth = 0
+        masterWidth = (screenFrame[1][0] - subWidth) / masterCount
+
+        i = 0
+        windows each: { win |
+            if i < masterCount {
+                x = left + i * masterWidth
+                y = top
+                masterCount = wm maxMastersOnScreen: screen space: spaceId
+                frame = [[x, y], [masterWidth, screenFrame[1][1]]]
+                win setFrame: frame
+            } else {
+                h = screenFrame[1][1] / subCount
+                y = top + h*(i - masterCount)
+                frame = [[left + subX, y], [subWidth, h]]
+                win setFrame: frame
+            }
+            ++i
+        }
+    }
+}
+
 @WideLayout < Layout
 {
     - reflow: wm screen: screen space: spaceId
