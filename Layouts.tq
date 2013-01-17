@@ -78,6 +78,7 @@ min = `a,b| (a > b) ? b ! a`
 
         masterCount = min(windows count, masterCount)
         subCount = windows count - masterCount
+        ^nil if masterCount == 0
 
         if subCount > 0 {
             subX = screenFrame[1][0] * (wm ratioForScreen: screen space: spaceId)
