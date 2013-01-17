@@ -15,6 +15,14 @@ To learn the hotkeys, read xnomad.default
 
 OS X 10.8 or newer is required.
 
+##included layouts
+
+ * Multi column
+ * Tall
+ * Wide
+ * Fullscreen
+ * Additional ones are easy to write
+
 ## protip
 
 In order to make the most of xnomad, I recommend you also install [afloat](http://infinite-labs.net/afloat/). It will add shortcuts for making windows floating (and therefore ignored by xnomad) and resizing/moving windows without having to spend precious milliseconds looking for the window edges.
