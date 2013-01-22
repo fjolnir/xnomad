@@ -23,7 +23,13 @@ import "Layouts"
         @screensThatNeedReflowing = []
         @spacesThatNeedReflowing  = []
 
-        @layouts = [MultiColLayout new, TallLayout new, WideLayout new, FullscreenLayout new]
+        @layouts = [
+            MultiColLayout new,
+            MultiColLayout new setHorizontallyFlipped: yes; self,
+            TallLayout new,
+            WideLayout new,
+            FullscreenLayout new
+        ]
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { app |

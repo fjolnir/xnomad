@@ -11,18 +11,15 @@ min = `a,b| (a > b) ? b ! a`
 
     - windowBefore: window inWm: wm
     {
-        screen  = window screen
-        windows = wm managedWindowsForScreen: screen space: wm currentSpaceId
-        idx     = windows indexOf: window
-        ^idx == 0 ? windows last ! windows[idx-1]
+        windows = wm managedWindowsForScreen: window screen
+                                       space: wm currentSpaceId
+        ^(windows itemBefore: window) || windows last
     }
     - windowAfter: window inWm: wm
     {
-        screen  = window screen
-        windows = wm managedWindowsForScreen: screen space: wm currentSpaceId
-        count   = windows count
-        idx     = windows indexOf: window
-        ^idx == count-1 ? windows[0] ! windows[idx+1]
+        windows = wm managedWindowsForScreen: window screen
+                                       space: wm currentSpaceId
+        ^(windows itemAfter: window) || windows first
     }
 
     - focusOnWindow: window inWm: wm `window raise`
@@ -67,6 +64,8 @@ min = `a,b| (a > b) ? b ! a`
 
 @MultiColLayout < Layout
 {
+    accessor: #horizontallyFlipped
+
     - reflow: wm screen: screen space: spaceId
     {
         windows     = wm managedWindowsForScreen: screen space: spaceId
@@ -81,16 +80,21 @@ min = `a,b| (a > b) ? b ! a`
         ^nil if masterCount == 0
 
         if subCount > 0 {
-            subX = screenFrame[1][0] * (wm ratioForScreen: screen space: spaceId)
-            subWidth    = (screenFrame[1][0] - subX)
+            subX     = screenFrame[1][0] * (wm ratioForScreen: screen space: spaceId)
+            subWidth = (screenFrame[1][0] - subX)
+            subX    += left
         } else
             subWidth = 0
         masterWidth = (screenFrame[1][0] - subWidth) / masterCount
 
+        subX = left if @horizontallyFlipped
+
         i = 0
         windows each: { win |
             if i < masterCount {
-                x = left + i * masterWidth
+                x = i * masterWidth
+                x = screenFrame[1][0] - x - masterWidth if @horizontallyFlipped
+                x += left
                 y = top
                 masterCount = wm maxMastersOnScreen: screen space: spaceId
                 frame = [[x, y], [masterWidth, screenFrame[1][1]]]
@@ -98,7 +102,7 @@ min = `a,b| (a > b) ? b ! a`
             } else {
                 h = screenFrame[1][1] / subCount
                 y = top + h*(i - masterCount)
-                frame = [[left + subX, y], [subWidth, h]]
+                frame = [[subX, y], [subWidth, h]]
                 win setFrame: frame
             }
             ++i
