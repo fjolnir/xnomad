@@ -7,9 +7,9 @@ A tiling window manager for OS X; written in [tranquil](https://github.com/fjoln
 
 ##setup
 
-[Download](https://github.com/fjolnir/xnomad/downloads) a binary and copy `xnomad.default` to `~/.xnomad`
+[Download](http://d.asgeirsson.is/sfEI) a binary and copy `xnomad.default` to `~/.xnomad`
 
-And then just execute xnomad, your windows will be snapped in place
+And then just execute xnomad, your windows will be snapped in place. (Make sure "Access for Assistive Devices" is enabled in the Accessibility preferences)
 
 To learn the hotkeys, read xnomad.default
 
