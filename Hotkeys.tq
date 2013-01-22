@@ -36,6 +36,7 @@ import "Carbon"
                               nil, hotkeyIdPtr = TQPointer withType:"{__EventHotKeyID=II}")
             hotkeyId = (hotkeyIdPtr value)[1]
             @hotkeyHandlers[hotkeyId-1] call
+            ^nil
         }, 1, eventSpec, nil, @eventHandlerRef = TQPointer toVoid)
         ^err == 0
     }
