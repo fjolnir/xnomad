@@ -5,6 +5,8 @@ A tiling window manager for OS X; written in [tranquil](https://github.com/fjoln
 
 [A screenshot of it running on my machine](http://d.asgeirsson.is/E9jb) (Along with a couple of other hacks to get rid of distractions such as the menubar & rounded corners)
 
+[Another one ](https://lh.rs/wSYYdAtpt2Xk) (With even more hacks, that aren't ready for public consumption yet; even has focus following mouse :)
+
 ##setup
 
 [Download](http://d.asgeirsson.is/sfEI) a binary and copy `xnomad.default` to `~/.xnomad`
