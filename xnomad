@@ -11,7 +11,7 @@ wm = WindowManager new
             setLayouts: [MultiColLayout new,
                          MultiColLayout new setHorizontallyFlipped: yes; self,
                          FullscreenLayout new];
-         reflow; self
+          reflow; self
 
 mgr = HotkeyManager new
 
