@@ -9,7 +9,7 @@ import "CGSPrivate"
         klass = rolePtr value case: {
             #AXApplication => `AccessibilityApplication`,
             #AXWindow      => `AccessibilityWindow`
-        } else: `AccessibilityElement`
+        } default: `AccessibilityElement`
         ^klass new setAxElement: element; self
     }
     + systemWide   `self withAXElement: AXUIElementCreateSystemWide() autorelease`

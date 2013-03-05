@@ -95,9 +95,8 @@ min = `a,b| (a > b) ? b ! a`
                 x = i * masterWidth
                 x = screenFrame[1][0] - x - masterWidth if @horizontallyFlipped
                 x += left
-                y = top
                 masterCount = wm maxMastersOnScreen: screen space: spaceId
-                frame = [[x, y], [masterWidth, screenFrame[1][1]]]
+                frame = [[x, top], [masterWidth, screenFrame[1][1]]]
                 win setFrame: frame
             } else {
                 h = screenFrame[1][1] / subCount

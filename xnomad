@@ -1,0 +1,107 @@
+#!/usr/local/tranquil/bin/tranquil
+
+import "WindowManager"
+import "Hotkeys"
+import "Layouts"
+
+wm = WindowManager new
+       setDefaultRatio: 0.7;
+    setWindowsInMaster: 1;
+    setLayouts: [MultiColLayout new,
+                 MultiColLayout new setHorizontallyFlipped: yes; self,
+                 FullscreenLayout new];
+    reflow; self
+
+mgr = HotkeyManager new
+
+mod1 = [#option, #control]
+mod2 = mod1 + [#command]
+
+\ Selection
+mgr registerHotkey: #k withModifiers: mod1 handler: {
+    wm selectPreviousWindow: AccessibilityWindow frontMostWindow
+    wm reflow
+}
+
+mgr registerHotkey: #j withModifiers: mod1 handler: {
+    wm selectNextWindow: AccessibilityWindow frontMostWindow
+    wm reflow
+}
+
+\ Swapping
+mgr registerHotkey: #s withModifiers: mod1 handler: {
+    win   = AccessibilityWindow frontMostWindow
+    other = wm swapWithCounterpart: win
+    other raise if (other frame)[0][0] > 10 \ If the other window was made primary
+                                            \ then it makes sense to give it focus
+    wm reflow
+}
+mgr registerHotkey: #k withModifiers: mod2 handler: {
+    wm swapWithPreviousWindow: AccessibilityWindow frontMostWindow; reflow
+}
+
+mgr registerHotkey: #j withModifiers: mod2 handler: {
+    wm swapWithNextWindow: AccessibilityWindow frontMostWindow; reflow
+}
+
+\ Ratio
+mgr registerHotkey: #l withModifiers: mod1 handler: {
+    screen = AccessibilityWindow frontMostWindow screen
+    space  = wm currentSpaceId
+    wm setRatio: (wm ratioForScreen: screen space: space) + 0.05 forScreen: screen space: space
+    wm reflow
+}
+
+mgr registerHotkey: #h withModifiers: mod1 handler: {
+    screen = AccessibilityWindow frontMostWindow screen
+    space  = wm currentSpaceId
+    wm setRatio: (wm ratioForScreen: screen space: space) - 0.05 forScreen: screen space: space
+    wm reflow
+}
+
+\ Master/slave count
+mgr registerHotkey: #"." withModifiers: mod1 handler: {
+    screen = AccessibilityWindow frontMostWindow screen
+    space  = wm currentSpaceId
+    wm setMaxMasters: (wm maxMastersOnScreen: screen space: space) + 1
+            onScreen: screen
+               space: space
+    wm reflow
+}
+
+mgr registerHotkey: #"," withModifiers: mod1 handler: {
+    screen = AccessibilityWindow frontMostWindow screen
+    space  = wm currentSpaceId
+    wm setMaxMasters: (wm maxMastersOnScreen: screen space: space) - 1
+            onScreen: screen
+               space: space
+    wm reflow
+}
+
+mgr registerHotkey: #" " withModifiers: mod2 handler: {
+    wm cycleLayouts; reflow
+}
+
+\ Display focus
+mgr registerHotkey: #w withModifiers: mod1 handler: {
+    wm focusOnScreen: screens[0] if (screens = NSScreen screens) count >= 1
+}
+mgr registerHotkey: #e withModifiers: mod1 handler: {
+    wm focusOnScreen: screens[1] if (screens = NSScreen screens) count >= 2
+}
+
+\ Moving windows between displays
+mgr registerHotkey: #w withModifiers: mod2 handler: {
+    if (screens = NSScreen screens) count >= 1 {
+        wm moveWindow: AccessibilityWindow frontMostWindow toScreen: screens[0]
+        wm reflow
+    }
+}
+mgr registerHotkey: #e withModifiers: mod2 handler: {
+    if (screens = NSScreen screens) count >= 2 {
+        wm moveWindow: AccessibilityWindow frontMostWindow toScreen: screens[1]
+        wm reflow
+    }
+}
+
+NSApplication sharedApplication run

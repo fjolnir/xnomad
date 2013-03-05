@@ -1,5 +1,4 @@
 import "Accessibility"
-import "Layouts"
 
 @NSNotificationCenter
 {
@@ -14,6 +13,7 @@ import "Layouts"
     accessor: #windowsInMaster    initialValue: 1
     accessor: #defaultRatio       initialValue: 0.7
     accessor: #defaultMaxMasters  initialValue: 1
+    accessor: #layouts            initialValue: []
 
     - init
     {
@@ -22,14 +22,6 @@ import "Layouts"
         @ratios      = {}
         @screensThatNeedReflowing = []
         @spacesThatNeedReflowing  = []
-
-        @layouts = [
-            MultiColLayout new,
-            MultiColLayout new setHorizontallyFlipped: yes; self,
-            TallLayout new,
-            WideLayout new,
-            FullscreenLayout new
-        ]
 
         workspace = NSWorkspace sharedWorkspace
         workspace runningApplications each: { app |
@@ -84,6 +76,7 @@ import "Layouts"
             (self managedWindowsForScreen: NSScreen mainScreen spaces: destSpace) first raise
         }
     }
+
 \ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
 \    - moveWindow: window toSpace: destSpaceIdx
 \    {
@@ -284,12 +277,12 @@ import "Layouts"
     - swapWithCounterpart: window
     {
         \ Get the existing reference managing the same physical window
-        screen = window screen
-        space  = self currentSpaceId
+        screen  = window screen
+        space   = self currentSpaceId
         windows = self managedWindowsForScreen: screen space: space
-        idx = windows indexOf: window
+        idx     = windows indexOf: window
         masterCount = self maxMastersOnScreen: screen space: space
-        isOnLeft = idx < masterCount
+        isOnLeft    = idx < masterCount
 
         winCount = windows count
         if isOnLeft {
@@ -300,7 +293,6 @@ import "Layouts"
 
         self swapWindow: window with: windows[otherIdx]
     }
-
 
     - focusOnScreen: screen
     {
