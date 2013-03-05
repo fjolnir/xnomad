@@ -16,7 +16,7 @@ wm = WindowManager new
 mgr = HotkeyManager new
 
 mod1 = [#option, #control]
-mod2 = mod1 + [#command]
+mod2 = mod1 + [#shift]
 
 \ Window selection
 mgr registerHotkey: #k withModifiers: mod1 handler: {
