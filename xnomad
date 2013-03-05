@@ -30,7 +30,7 @@ mgr registerHotkey: #j withModifiers: mod1 handler: {
 }
 
 \ Swapping
-mgr registerHotkey: #s withModifiers: mod1 handler: {
+mgr registerHotkey: #return withModifiers: mod1 handler: {
     win   = AccessibilityWindow frontMostWindow
     other = wm swapWithCounterpart: win
     other raise if (other frame)[0][0] > 10 \ If the other window was made primary
