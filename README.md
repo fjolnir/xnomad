@@ -30,3 +30,23 @@ In order to make the most of xnomad, I recommend you also install [afloat](http:
 Another nice addition is [menufela](http://github.com/fjolnir/menufela) which hides the menubar)
 
 The rounded corner hack is discussed under this issue: https://github.com/fjolnir/xnomad/issues/6
+
+##keyboard shortcuts
+
+By default xnomad uses `ctrl + option` as `mod1` and `ctrl + shift + option` as `mod2`.
+You can change all these by editing `./xnomad`.
+
+* `mod1 + j` — focus the next window clockwise
+* `mod1 + k` — focus the next window anticlockwise
+* `mod1 + return` — move the focused window to or from the main pane
+* `mod1 + l` — make the main pane wider
+* `mod1 + h` — make the main pane narrower
+* `mod1 + .` — add the focused window to the main pane
+* `mod1 + ,` — remove the focused window from the main pane
+* `mod1 + w` — focus the primary display
+* `mod1 + e` — focus the secondary display
+* `mod2 + w` — move the focused window to the primary display
+* `mod2 + e` — move the focused window to the secondary display
+* `mod2 + j` — move the focused window one place clockwise
+* `mod2 + k` — move the focused window one place anticlockwise
+* `mod2 + space` — change layout
