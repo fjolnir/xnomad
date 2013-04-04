@@ -120,7 +120,7 @@ import "Accessibility"
         self markSpacesForReflowing: window spaceIds
         ^nil unless window isResizable
 
-        if isActive && window[#AXMinimized] ~= 1 then
+        if isActive && window[#AXMinimized] boolValue ~= 1 then
             @activeWindows insert: window at: 0
         else
             @inactiveWindows push: window
