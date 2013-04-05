@@ -62,6 +62,7 @@ extern void CGSShowSpaces(const CGSConnection cid, CFArrayRef spaces);
 
 extern void CGSAddWindowsToSpaces(const CGSConnection cid, CFArrayRef windows, CFArrayRef spaces);
 extern void CGSRemoveWindowsFromSpaces(const CGSConnection cid, CFArrayRef windows, CFArrayRef spaces);
+extern OSStatus CGSMoveWorkspaceWindowList(const CGSConnection connection, CGSWindow *wids, int count, int toWorkspace);
 
 typedef uint64_t CGSManagedDisplay;
 extern CGSManagedDisplay kCGSPackagesMainDisplayIdentifier;

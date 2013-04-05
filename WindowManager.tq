@@ -80,14 +80,20 @@ import "Accessibility"
 \ This doesn't work yet, not sure if my function prototype is wrong, or if you need elevated permissions to move windows around
 \    - moveWindow: window toSpace: destSpaceIdx
 \    {
+\        ^nil if window spaceIds count > 1
+\
 \        conn   = _CGSDefaultConnection()
 \        spaces = CGSCopySpaces(conn, KCGSSpaceAll)
-\        srcSpace  = window spaceId
+\        srcSpace  = window spaceIds at: 0
 \        destSpace = spaces[destSpaceIdx]
 \
 \        ^nil if srcSpace == destSpace
-\        CGSRemoveWindowsFromSpaces(conn, [window _cgWindow], [srcSpace])
-\        CGSAddWindowsToSpaces(conn, [window _cgWindow], [destSpace])
+\        destSpace print
+\        CGSMoveWorkspaceWindowList(conn,
+\                                   TQPointer to: window _cgWindow withType: #i,
+\                                    1, destSpace) print
+\        CGSRemoveWindowsFromSpaces(conn, [window _cgWindow], [srcSpace]) print
+\        CGSAddWindowsToSpaces(conn, [window _cgWindow], [destSpace]) print
 \    }
 
     - applicationWithPID: pid
@@ -291,7 +297,7 @@ import "Accessibility"
         } else
             otherIdx = masterCount * ((idx - masterCount) / (winCount - masterCount))
 
-        self swapWindow: window with: windows[otherIdx]
+        self swapWindow: window with: windows[otherIdx] if otherIdx < windows count
     }
 
     - focusOnScreen: screen
@@ -306,7 +312,7 @@ import "Accessibility"
         currSpace = self currentSpaceId
         self markScreenForReflowing: srcScreen
         self markScreenForReflowing: destScreen
-        self markSpaceForReflowing: currSpace
+        self  markSpaceForReflowing: currSpace
 
         @activeWindows remove: window
         @activeWindows insert: window at: 0
