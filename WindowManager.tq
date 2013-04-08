@@ -14,6 +14,7 @@ import "Accessibility"
     accessor: #defaultRatio       initialValue: 0.7
     accessor: #defaultMaxMasters  initialValue: 1
     accessor: #layouts            initialValue: []
+    accessor: #windowChecker
 
     - init
     {
@@ -121,10 +122,11 @@ import "Accessibility"
     - addWindow: window active: isActive
     {
         ^nil unless window isKindOfClass: AccessibilityWindow
+        ^nil unless window isResizable
+        ^nil unless @windowChecker == nil or @windowChecker(window)
 
         self markScreenForReflowing: window screen
         self markSpacesForReflowing: window spaceIds
-        ^nil unless window isResizable
 
         if isActive && window[#AXMinimized] boolValue ~= 1 then
             @activeWindows insert: window at: 0

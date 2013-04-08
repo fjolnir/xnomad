@@ -11,12 +11,19 @@ wm = WindowManager new
             setLayouts: [MultiColLayout new,
                          MultiColLayout new setHorizontallyFlipped: yes; self,
                          FullscreenLayout new];
-          reflow; self
+                  self
 
 mgr = HotkeyManager new
 
 mod1 = [#option, #control]
 mod2 = mod1 + [#shift]
+
+\ Window filter
+wm windowChecker = { win |
+    \ Ignore windows below a certain height/width (This ignores copy/paste dialogs for example)
+    frame = win frame
+    ^frame[1][0] > 200 and frame[1][1] > 200
+}
 
 \ Window selection
 mgr registerHotkey: #k withModifiers: mod1 handler: {
@@ -109,4 +116,5 @@ mgr registerHotkey: #e withModifiers: mod2 handler: {
     }
 }
 
+wm reflow
 NSApplication sharedApplication run
