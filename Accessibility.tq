@@ -1,5 +1,5 @@
-import "AppKit"
 import "CGSPrivate"
+import "Foundation/NSGeometry"
 
 @AccessibilityElement {
     accessor: #axElement

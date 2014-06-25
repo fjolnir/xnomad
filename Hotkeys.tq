@@ -1,4 +1,4 @@
-import "Carbon"
+import "Carbon/HIToolbox"
 
 @HotkeyManager {
     accessor: #eventHandlerInstalled

@@ -1,4 +1,5 @@
 import "Accessibility"
+import "AppKit/NSWorkspace"
 
 @NSNotificationCenter
 {
@@ -30,28 +31,28 @@ import "Accessibility"
         }
 
         workspace notificationCenter
-                observe: NSWorkspaceDidLaunchApplicationNotification with: { n |
-                    ^nil if (n userInfo at:#NSApplicationBundleIdentifier) == nil
-                    ~self addApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
-                                         reflow
-                };
-                observe: NSWorkspaceDidTerminateApplicationNotification with: { n |
-                    ~self removeApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+            observe: NSWorkspaceDidLaunchApplicationNotification with: { n |
+                ^nil if (n userInfo at:#NSApplicationBundleIdentifier) == nil
+                ~self addApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                     reflow
+            };
+            observe: NSWorkspaceDidTerminateApplicationNotification with: { n |
+                ~self removeApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                        reflow
+            };
+            observe: NSWorkspaceDidUnhideApplicationNotification with: { n |
+                ~self activateApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
+                                          reflow
+            };
+            observe: NSWorkspaceDidHideApplicationNotification with: { n |
+                ~self deactivateApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
                                             reflow
-                };
-                observe: NSWorkspaceDidUnhideApplicationNotification with: { n |
-                    ~self activateApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
-                                              reflow
-                };
-                observe: NSWorkspaceDidHideApplicationNotification with: { n |
-                    ~self deactivateApplicationWithPID: (n userInfo at:#NSWorkspaceApplicationKey) processIdentifier;
-                                                reflow
-                };
-                observe: NSWorkspaceActiveSpaceDidChangeNotification with: { n |
-                    ~self markAllScreensForReflowing;
-                               markSpaceForReflowing: self currentSpaceId;
-                                              reflow
-                }
+            };
+            observe: NSWorkspaceActiveSpaceDidChangeNotification with: { n |
+                ~self markAllScreensForReflowing;
+                           markSpaceForReflowing: self currentSpaceId;
+                                          reflow
+            }
         ^self
     }
 

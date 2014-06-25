@@ -1,4 +1,4 @@
-#include <Carbon/Carbon.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 /* These functions all return a status code. Typical CoreGraphics replies are:
     kCGErrorSuccess = 0,
