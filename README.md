@@ -7,7 +7,7 @@ A tiling window manager for OS X; written in [tranquil](https://github.com/fjoln
 
 [Another one ](https://lh.rs/wSYYdAtpt2Xk) (With even more hacks, that aren't ready for public consumption yet; even has focus following mouse :)
 
-##setup
+## setup
 
 * Download & install [tranquil](https://github.com/fjolnir/Tranquil)
 * Make sure "Access for Assistive Devices" is enabled in Accessibility Preferences
@@ -15,7 +15,7 @@ A tiling window manager for OS X; written in [tranquil](https://github.com/fjoln
 
 OS X 10.8 or newer is required.
 
-##included layouts
+## included layouts
 
  * Multi column
  * Tall
@@ -23,7 +23,7 @@ OS X 10.8 or newer is required.
  * Fullscreen
  * Additional ones are easy to write
 
-##protips
+## protips
 
 In order to make the most of xnomad, I recommend you also install [afloat](http://infinite-labs.net/afloat/). It will add shortcuts for making windows floating (and therefore ignored by xnomad) and resizing/moving windows without having to spend precious milliseconds looking for the window edges.
 
@@ -31,7 +31,7 @@ Another nice addition is [menufela](http://github.com/fjolnir/menufela) which hi
 
 The rounded corner hack is discussed under this issue: https://github.com/fjolnir/xnomad/issues/6
 
-##keyboard shortcuts
+## keyboard shortcuts
 
 By default xnomad uses `ctrl + option` as `mod1` and `ctrl + shift + option` as `mod2`.
 You can change all these by editing `./xnomad`.
